@@ -1,0 +1,36 @@
+ACCOGLIENZA TASCABILE · CASA D. CAROTA
+Versione autonoma: funziona senza rete e senza account Claude.
+
+COSA C'E' IN QUESTA CARTELLA
+Solo il programma, il logo e le icone. Nessun dato degli ospiti.
+I dati restano nel tuo file Excel protetto, che l'app apre sul telefono.
+
+METTERLA ONLINE CON GITHUB PAGES (gratis, una volta sola)
+1. Vai su github.com e crea un account gratuito.
+2. In alto a destra tocca + e scegli New repository.
+   Nome: accoglienza. Lascia Public. Spunta Add a README. Premi Create repository.
+3. Nel repository premi Add file, poi Upload files.
+   Trascina tutti i file di questa cartella, non la cartella intera.
+   In fondo premi Commit changes.
+4. Vai in Settings, poi Pages nella colonna di sinistra.
+   Sotto Branch scegli main e la cartella / (root). Premi Save.
+5. Aspetta due minuti e ricarica la pagina. In alto compare l'indirizzo,
+   per esempio https://tuonome.github.io/accoglienza/
+
+INSTALLARLA SULL'IPHONE
+1. Apri l'indirizzo in Safari, con la connessione attiva.
+2. Condividi, poi Aggiungi alla schermata Home. Il nome proposto e' D. Carota.
+3. Apri l'app dall'icona, scegli il file Excel e scrivi la password.
+4. Da quel momento parte anche senza rete.
+Puoi togliere l'icona della versione vecchia: tieni premuto e scegli Rimuovi app.
+
+AGGIORNARE IL PROGRAMMA
+Se un giorno cambi un file dell'app, apri sw.js e aumenta il numero
+nella riga VERSIONE (da v1 a v2). Poi ricarica i file su GitHub.
+Per aggiornare i dati degli ospiti non serve nulla di tutto questo:
+basta Scegli un altro file nell'app.
+
+NOTA
+La pagina su GitHub e' pubblica, come richiede il piano gratuito.
+Chi trova l'indirizzo vede solo la schermata d'accesso con il logo.
+Senza il tuo file e la tua password non vede nessun dato.

@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Accoglienza Tascabile</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="D. Carota">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF1F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1716" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex,nofollow">
+<link rel="apple-touch-icon" href="icona-180.png">
+<link rel="icon" href="icona-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+/* Layout: una colonna da telefono. Blocco, elenco con riepilogo, scheda a schermo intero. */
+:root{
+  --bg:#EDF1F0; --surface:#FFFFFF; --fg:#14201E; --muted:#56635F; --line:#D5DDDA;
+  --accent:#0E5755; --accent-soft:#D4E6E4; --on-accent:#FFFFFF;
+  --ok:#25643A; --ok-soft:#DBEEDF; --warn:#7A5200; --warn-soft:#F6E7C4;
+  --bad:#9A2A2A; --bad-soft:#F5DADA; --info:#20477A; --info-soft:#DCE6F4;
+  --f-body:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --f-code:ui-monospace,"SF Mono",Menlo,monospace;
+  --s-0:15px; --s-1:18px; --s-2:20px; --s-3:24px; --s-4:32px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
+  --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
+  --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
+  --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
+  --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:var(--s-1);line-height:1.45;
+  -webkit-text-size-adjust:100%;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.code{font-family:var(--f-code);font-size:.92em;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.label{font-size:var(--s-0);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+
+/* blocco */
+.lock{display:grid;gap:20px;padding-top:9vh}
+.lock h1{font-size:var(--s-4)}
+.lock p{margin:0}
+.field{display:grid;gap:8px}
+.input{width:100%;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font-size:var(--s-2)}
+.input:focus{border-color:var(--accent);outline:none}
+.btn{appearance:none;border:0;border-radius:12px;padding:15px 18px;font-weight:700;font-size:var(--s-1);
+  background:var(--accent);color:var(--on-accent);width:100%}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn:disabled{opacity:.55}
+.filebox{display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.filebox > div{min-width:0}
+.filebox b{display:block;overflow-wrap:anywhere}
+.err{color:var(--bad);font-weight:700;margin:0}
+.note{font-size:var(--s-0);color:var(--muted)}
+.hide-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.logo{display:block;background:#FFFFFF;border-radius:14px;padding:10px 12px;border:1px solid var(--line)}
+.logo img{display:block;width:100%;height:auto}
+.logo.small{padding:6px 8px;border-radius:10px;margin-block:4px 14px}
+/* testata elenco */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 10px;display:grid;gap:10px}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.toprow h1{font-size:var(--s-3)}
+.iconbtn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:var(--s-0);font-weight:700;color:var(--accent);white-space:nowrap}
+.search{font-size:var(--s-2)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:var(--s-0);font-weight:700;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-block:6px 18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:var(--s-4);line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:var(--s-0);color:var(--muted)}
+
+.section{display:grid;gap:10px;margin-bottom:22px}
+.agenda{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.agenda li + li{border-top:1px solid var(--line)}
+.agenda button{appearance:none;border:0;background:none;width:100%;text-align:left;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:baseline}
+.agenda .when{font-weight:700;font-variant-numeric:tabular-nums;min-width:5.2em}
+.agenda .what{min-width:0}
+.agenda .who{grid-column:2;color:var(--muted);font-size:var(--s-0)}
+
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.row{appearance:none;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.row .name{font-weight:700;font-size:var(--s-2);min-width:0;overflow-wrap:anywhere}
+.row .meta{grid-column:1;color:var(--muted);font-size:var(--s-0)}
+.row .dot{grid-row:1 / span 2;grid-column:2;font-size:var(--s-0);font-weight:700;padding:4px 10px;border-radius:999px}
+.row.out{opacity:.72}
+.dot.in{background:var(--ok-soft);color:var(--ok)}
+.dot.out{background:var(--line);color:var(--muted)}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+
+/* scheda */
+.back{appearance:none;border:0;background:none;color:var(--accent);font-weight:700;font-size:var(--s-1);padding:6px 0}
+.head{display:grid;gap:8px;margin-block:6px 16px}
+.head h2{font-size:var(--s-4)}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{font-size:var(--s-0);font-weight:700;padding:6px 11px;border-radius:8px;line-height:1.25}
+.b-ok{background:var(--ok-soft);color:var(--ok)} .b-bad{background:var(--bad-soft);color:var(--bad)}
+.b-warn{background:var(--warn-soft);color:var(--warn)} .b-info{background:var(--info-soft);color:var(--info)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.card > summary{list-style:none;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:700;font-size:var(--s-2);cursor:pointer}
+.card > summary::-webkit-details-marker{display:none}
+.card > summary::after{content:"+";color:var(--accent);font-size:var(--s-3);line-height:1}
+.card[open] > summary::after{content:"–"}
+.card > summary small{font-weight:400;color:var(--muted);font-size:var(--s-0);margin-left:auto}
+.kv{margin:0;padding:0 16px 10px;display:grid}
+.kv div{display:grid;gap:2px;padding-block:9px;border-top:1px solid var(--line)}
+.kv dt{font-size:var(--s-0);color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.kv dd.none{color:var(--line)}
+.entry{padding:12px 16px;border-top:1px solid var(--line);display:grid;gap:4px}
+.entry .when{font-weight:700}
+.nodata{padding:0 16px 16px;color:var(--muted);margin:0}
+.busy{display:flex;gap:10px;align-items:center;color:var(--muted)}
+.spin{width:20px;height:20px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script src="xlsx.full.min.js"></script>
+<script src="aes.js"></script>
+<script src="sha512.min.js"></script>
+<script>
+"use strict";
+/* ---------------- impostazioni ---------------- */
+const FOGLIO_PRINCIPALE = "ANAGRAFICA";
+const FOGLI_ESCLUSI = ["LISTE"];
+const TITOLI = {"ANAGRAFICA":"Anagrafica","PERCORSO MIGRATORIO":"Percorso migratorio","STATO GIURIDICO":"Stato giuridico",
+  "SALUTE BISOGNI":"Salute e bisogni","INTEGRAZIONE":"Integrazione","REGISTRO INTERVENTI":"Registro interventi"};
+const GIORNI_SCADENZA = 90, GIORNI_AGENDA = 30, BLOCCO_MINUTI = 3;
+
+/* ---------------- utilità ---------------- */
+const $ = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return el;
+};
+const norm = s => String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+const oggi = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const giorni = (a, b) => Math.round((a - b) / 86400000);
+const fmtData = d => d ? `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}` : "";
+const breve = d => d.toLocaleDateString("it-IT", {day:"numeric", month:"short"});
+const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+/* ---------------- archivio cifrato sul telefono (IndexedDB) ---------------- */
+function idb() {
+  return new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open("accoglienza", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("file");
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  });
+}
+async function salvaFile(rec) {
+  try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction("file","readwrite");
+    t.objectStore("file").put(rec, "db"); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; }
+  catch { return false; }
+}
+async function leggiFile() {
+  try { const db = await idb(); return await new Promise((res) => { const q = db.transaction("file").objectStore("file").get("db");
+    q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+  catch { return null; }
+}
+async function cancellaFile() {
+  try { const db = await idb(); await new Promise(res => { const t = db.transaction("file","readwrite");
+    t.objectStore("file").delete("db"); t.oncomplete = res; t.onerror = res; }); } catch {}
+}
+
+/* ---------------- decifratura Excel (ECMA-376 Agile) ---------------- */
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const cat = (...a) => { const o = new Uint8Array(a.reduce((n, x) => n + x.length, 0)); let i = 0; for (const x of a) { o.set(x, i); i += x.length; } return o; };
+const u32 = n => new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]);
+const H = u8 => new Uint8Array(sha512.arrayBuffer(u8));
+const uguali = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+function aesDec(key, iv, data) {
+  const n = data.length - (data.length % 16);
+  return new aesjs.ModeOfOperation.cbc(key, iv).decrypt(data.subarray(0, n));
+}
+function fitKey(h, len) { if (h.length >= len) return h.slice(0, len); const o = new Uint8Array(len).fill(0x36); o.set(h); return o; }
+
+class PasswordErrata extends Error {}
+
+function eCifrato(u8) { return !(u8[0] === 0x50 && u8[1] === 0x4B); }
+
+function decifra(u8, password) {
+  const cfb = XLSX.CFB.read(u8, {type: "array"});
+  const info = XLSX.CFB.find(cfb, "EncryptionInfo"), pkg = XLSX.CFB.find(cfb, "EncryptedPackage");
+  if (!info || !pkg) throw new Error("Il file non sembra un Excel protetto da password.");
+  const inf = new Uint8Array(info.content), pk = new Uint8Array(pkg.content);
+  if (!(inf[0] === 4 && inf[2] === 4)) throw new Error("Questo tipo di protezione non è supportato. Salva il file con Excel recente.");
+  const xml = new DOMParser().parseFromString(new TextDecoder().decode(inf.subarray(8)), "application/xml");
+  const kd = xml.getElementsByTagNameNS("*", "keyData")[0], ek = xml.getElementsByTagNameNS("*", "encryptedKey")[0];
+  if ((ek.getAttribute("hashAlgorithm") || "") !== "SHA512" || kd.getAttribute("hashAlgorithm") !== "SHA512")
+    throw new Error("Algoritmo di protezione non supportato.");
+  const keyBytes = +ek.getAttribute("keyBits") / 8, salt = b64(ek.getAttribute("saltValue"));
+  const spin = +ek.getAttribute("spinCount");
+  const pw = new Uint8Array(password.length * 2);
+  for (let i = 0; i < password.length; i++) { const c = password.charCodeAt(i); pw[2*i] = c & 255; pw[2*i+1] = c >> 8; }
+  let h = H(cat(salt, pw));
+  const buf = new Uint8Array(4 + 64);
+  for (let i = 0; i < spin; i++) { buf.set(u32(i), 0); buf.set(h, 4); h = H(buf); }
+  const derive = blk => fitKey(H(cat(h, new Uint8Array(blk))), keyBytes);
+  // verifica password
+  const vIn = aesDec(derive([0xfe,0xa7,0xd2,0x76,0x3b,0x4b,0x9e,0x79]), salt, b64(ek.getAttribute("encryptedVerifierHashInput"))).subarray(0, salt.length);
+  const vHash = aesDec(derive([0xd7,0xaa,0x0f,0x6d,0x30,0x61,0x34,0x4e]), salt, b64(ek.getAttribute("encryptedVerifierHashValue"))).subarray(0, 64);
+  if (!uguali(H(vIn), vHash)) throw new PasswordErrata();
+  const secret = aesDec(derive([0x14,0x6e,0x0b,0xe7,0xab,0xac,0xd0,0xd6]), salt, b64(ek.getAttribute("encryptedKeyValue"))).subarray(0, keyBytes);
+  // pacchetto, a blocchi da 4096 byte
+  const size = pk[0] | (pk[1] << 8) | (pk[2] << 16) | (pk[3] << 24);
+  const kdSalt = b64(kd.getAttribute("saltValue")), blockSize = +kd.getAttribute("blockSize");
+  const out = new Uint8Array(pk.length);
+  let o = 0;
+  for (let i = 0, off = 8; off < pk.length; i++, off += 4096) {
+    const iv = H(cat(kdSalt, u32(i))).subarray(0, blockSize);
+    const dec = aesDec(secret, iv, pk.subarray(off, Math.min(off + 4096, pk.length)));
+    out.set(dec, o); o += dec.length;
+  }
+  return out.subarray(0, size >>> 0);
+}
+
+/* ---------------- lettura fogli ---------------- */
+function valore(c) {
+  if (!c) return null;
+  if (c.t === "n" && c.z && XLSX.SSF.is_date(c.z)) {
+    const p = XLSX.SSF.parse_date_code(c.v); return new Date(p.y, p.m - 1, p.d);
+  }
+  if (c.t === "d") return new Date(c.v.getFullYear(), c.v.getMonth(), c.v.getDate());
+  if (c.t === "n") return Number.isInteger(c.v) ? String(c.v) : (c.w || String(c.v));
+  if (c.t === "b") return c.v ? "Sì" : "No";
+  const s = String(c.v ?? "").trim(); return s || null;
+}
+const testo = v => v instanceof Date ? fmtData(v) : (v ?? "");
+
+function costruisci(u8) {
+  const wb = XLSX.read(u8, {type: "array", cellNF: true, cellDates: false});
+  const meta = (wb.Workbook && wb.Workbook.Sheets) || [];
+  const fogli = [];
+  let anag = null;
+  wb.SheetNames.forEach((nome, i) => {
+    if (FOGLI_ESCLUSI.includes(nome.toUpperCase()) || (meta[i] && meta[i].Hidden)) return;
+    const ws = wb.Sheets[nome]; if (!ws || !ws["!ref"]) return;
+    const R = XLSX.utils.decode_range(ws["!ref"]);
+    const intest = [];
+    for (let c = R.s.c; c <= R.e.c; c++) intest.push(testo(valore(ws[XLSX.utils.encode_cell({r: R.s.r, c})])));
+    while (intest.length && !intest[intest.length - 1]) intest.pop();
+    const ki = intest.findIndex(h => norm(h) === "codice id");
+    if (ki < 0) return;
+    const dati = new Map();
+    for (let r = R.s.r + 1; r <= R.e.r; r++) {
+      const riga = {};
+      intest.forEach((h, j) => { if (h) riga[h] = valore(ws[XLSX.utils.encode_cell({r, c: R.s.c + j})]); });
+      const cod = String(testo(riga[intest[ki]])).toUpperCase().trim();
+      if (!cod) continue;
+      if (!dati.has(cod)) dati.set(cod, []);
+      dati.get(cod).push(riga);
+    }
+    const f = {nome, titolo: TITOLI[nome.toUpperCase()] || nome, campi: intest.filter((h, j) => h && j !== ki), dati};
+    fogli.push(f);
+    if (nome.toUpperCase() === FOGLIO_PRINCIPALE) anag = f;
+  });
+  if (!anag) throw new Error(`Nel file manca il foglio ${FOGLIO_PRINCIPALE} con la colonna Codice ID.`);
+  const ospiti = [...anag.dati.entries()].map(([cod, righe]) => ({cod, r: righe[0]}))
+    .filter(o => campo(o.r, "Cognome") || campo(o.r, "Nome"))
+    .sort((a, b) => a.cod.localeCompare(b.cod, "it", {numeric: true}));
+  return {fogli, ospiti};
+}
+function campo(riga, ...nomi) {
+  const ks = Object.keys(riga);
+  for (const n of nomi) { const k = ks.find(k => norm(k) === norm(n)); if (k && riga[k] != null) return riga[k]; }
+  for (const n of nomi) { const k = ks.find(k => norm(k).includes(norm(n))); if (k && riga[k] != null) return riga[k]; }
+  return null;
+}
+const nomeCompleto = r => `${String(testo(campo(r, "Cognome"))).toUpperCase()} ${testo(campo(r, "Nome"))}`.trim();
+const uscito = r => !!campo(r, "Data Uscita dalla Struttura", "Data uscita");
+
+function avvisi(cod) {
+  const out = [], t = oggi();
+  for (const f of S.dati.fogli) for (const r of (f.dati.get(cod) || [])) for (const [k, v] of Object.entries(r)) {
+    const kn = norm(k);
+    if (kn.includes("scadenza") && v instanceof Date) {
+      const g = giorni(v, t);
+      if (g < 0) out.push({t: `${k.replace(/^Data /i, "")} scaduto il ${fmtData(v)}`, c: "b-bad", d: v, k: "scad"});
+      else if (g <= GIORNI_SCADENZA) out.push({t: `${k.replace(/^Data /i, "")}: ${fmtData(v)}`, c: "b-warn", d: v, k: "scad"});
+    }
+    if (kn.includes("appuntamento") && v instanceof Date && v >= t && norm(f.nome) !== "registro interventi")
+      out.push({t: `${k.replace(/^Data /i, "")}: ${fmtData(v)}`, c: "b-info", d: v, k: "app"});
+    if (kn === "allergie" && v && !["nessuna", "no", "-", "n/a"].includes(norm(v)))
+      out.push({t: `Allergie: ${testo(v)}`, c: "b-bad"});
+    if (kn.includes("supporto psicologico") && norm(v).startsWith("s"))
+      out.push({t: "Supporto psicologico attivo", c: "b-warn"});
+  }
+  return out;
+}
+
+/* ---------------- stato e viste ---------------- */
+const S = {dati: null, file: null, filtro: lsGet("filtro") || "presenti", cerca: "", cod: null, err: "", busy: false, nascostoDa: 0};
+const app = document.getElementById("app");
+function mostra(...nodi) { app.replaceChildren(...nodi.flat(Infinity).filter(n => n != null && n !== false)); }
+
+async function vistaBlocco() {
+  if (!S.file) S.file = await leggiFile();
+  const inp = $("input", {type: "file", id: "file", class: "hide-input", accept: ".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    onchange: async e => { const f = e.target.files[0]; if (!f) return;
+      S.file = {nome: f.name, quando: Date.now(), buf: new Uint8Array(await f.arrayBuffer())}; S.err = ""; vistaBlocco(); }});
+  const scegli = $("button", {class: "btn ghost", type: "button", onclick: () => inp.click()}, S.file ? "Scegli un altro file" : "Scegli il file Excel");
+  const pw = $("input", {class: "input", id: "pw", type: "password", autocomplete: "current-password", placeholder: "Password del file", enterkeyhint: "go"});
+  const apri = $("button", {class: "btn", type: "submit", disabled: S.busy || !S.file}, "Apri");
+  const form = $("form", {class: "field", onsubmit: e => { e.preventDefault(); sblocca(pw.value); }},
+    $("label", {for: "pw", class: "label"}, "Password"), pw, apri);
+  mostra($("section", {class: "lock"},
+    $("div", {class: "logo"}, $("img", {src: "logo.png", alt: "Casa D. Carota"})),
+    $("h1", {}, "Accoglienza Tascabile"),
+    S.file ? $("div", {class: "filebox"}, $("div", {},
+      $("b", {}, S.file.nome),
+      $("span", {class: "note"}, `caricato il ${fmtData(new Date(S.file.quando))}`))) :
+      $("p", {class: "muted"}, "Scegli il tuo DataBase_Accoglienza.xlsx da iCloud Drive o da File. Il file resta cifrato sul telefono e si apre solo con la password."),
+    inp, scegli,
+    S.file ? form : null,
+    S.busy ? $("div", {class: "busy"}, $("span", {class: "spin"}), "Sto aprendo il file") : null,
+    S.err ? $("p", {class: "err", role: "alert"}, S.err) : null,
+    $("p", {class: "note"}, "Niente lascia il telefono. La password non viene salvata. L'app si blocca da sola se resta in secondo piano per più di " + BLOCCO_MINUTI + " minuti.")
+  ));
+  if (S.file && !S.busy) setTimeout(() => pw.focus(), 50);
+}
+
+async function sblocca(password) {
+  if (!S.file) return;
+  S.busy = true; S.err = ""; vistaBlocco();
+  await new Promise(r => setTimeout(r, 60));
+  try {
+    const buf = S.file.buf;
+    let chiaro;
+    if (eCifrato(buf)) {
+      if (!password) throw new Error("Scrivi la password del file.");
+      chiaro = decifra(buf, password);
+      if (!(S.file.salvato)) { S.file.salvato = await salvaFile({nome: S.file.nome, quando: S.file.quando, buf}); }
+    } else {
+      chiaro = buf; // file senza password: lo leggo ma non lo salvo sul telefono
+    }
+    S.dati = costruisci(chiaro);
+    S.dati.protetto = eCifrato(buf);
+    S.busy = false; S.cod = null; vistaElenco();
+  } catch (e) {
+    S.busy = false;
+    S.err = e instanceof PasswordErrata ? "Password errata. Riprova." : (e.message || "Non riesco a leggere il file.");
+    vistaBlocco();
+  }
+}
+
+function blocca() { S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
+
+function vistaElenco() {
+  const t = oggi(), {ospiti} = S.dati;
+  const presenti = ospiti.filter(o => !uscito(o.r));
+  const usciti30 = ospiti.filter(o => { const d = campo(o.r, "Data Uscita dalla Struttura", "Data uscita"); return d instanceof Date && giorni(t, d) <= 30; });
+  // agenda: appuntamenti e scadenze dei presenti
+  const agenda = [];
+  for (const o of presenti) for (const a of avvisi(o.cod)) if (a.d && (a.k === "app" ? giorni(a.d, t) <= GIORNI_AGENDA : true))
+    agenda.push({...a, o});
+  agenda.sort((a, b) => a.d - b.d);
+
+  const lista = $("ul", {class: "list", id: "lista"});
+  const riempi = () => {
+    const q = norm(S.cerca), qn = q.replace(/^0+/, "");
+    let righe = S.filtro === "presenti" ? presenti : ospiti;
+    if (q) righe = righe.filter(o => /^\d+$/.test(q) ? o.cod.split("-").pop().replace(/^0+/, "") === qn
+      : norm(o.cod + " " + nomeCompleto(o.r)).includes(q));
+    lista.replaceChildren(...(righe.length ? righe.map(o => {
+      const out = uscito(o.r), naz = testo(campo(o.r, "Nazionalità")), st = testo(campo(o.r, "Assegnazione stanza/letto", "stanza"));
+      return $("li", {}, $("button", {class: "row" + (out ? " out" : ""), type: "button", onclick: () => apriScheda(o.cod)},
+        $("span", {class: "name"}, nomeCompleto(o.r)),
+        $("span", {class: "dot " + (out ? "out" : "in")}, out ? "Uscito" : "Presente"),
+        $("span", {class: "meta"}, $("span", {class: "code"}, o.cod), [naz, st].filter(Boolean).map(x => "  ·  " + x).join(""))));
+    }) : [$("li", {class: "empty"}, q ? "Nessun ospite trovato." : "Nessun ospite in elenco.")]));
+  };
+  const cerca = $("input", {class: "input search", id: "cerca", type: "search", value: S.cerca, placeholder: "Codice, numero o cognome",
+    autocomplete: "off", autocapitalize: "characters", enterkeyhint: "search",
+    oninput: e => { S.cerca = e.target.value; riempi(); },
+    onkeydown: e => { if (e.key === "Enter") { const b = lista.querySelector("button.row"); if (b && lista.querySelectorAll("button.row").length === 1) b.click(); } }});
+  const chip = (v, l) => $("button", {class: "chip", type: "button", "aria-pressed": String(S.filtro === v),
+    onclick: () => { S.filtro = v; lsSet("filtro", v); vistaElenco(); }}, l);
+
+  mostra(
+    $("header", {class: "top"},
+      $("div", {class: "toprow"}, $("h1", {}, "Ospiti"), $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca")),
+      cerca,
+      $("div", {class: "chips"}, chip("presenti", `Presenti ${presenti.length}`), chip("tutti", `Tutti ${ospiti.length}`))),
+    S.cerca ? null : $("div", {class: "logo small"}, $("img", {src: "logo.png", alt: "Casa D. Carota"})),
+    S.cerca ? null : $("div", {class: "stats"},
+      $("div", {class: "stat"}, $("b", {}, presenti.length), $("span", {}, "presenti")),
+      $("div", {class: "stat"}, $("b", {}, usciti30.length), $("span", {}, "usciti negli ultimi 30 giorni")),
+      $("div", {class: "stat"}, $("b", {}, agenda.length), $("span", {}, "scadenze e appuntamenti"))),
+    S.cerca || !agenda.length ? null : $("section", {class: "section"},
+      $("h2", {class: "label"}, "Da tenere d'occhio"),
+      $("ul", {class: "agenda"}, agenda.slice(0, 12).map(a => $("li", {}, $("button", {type: "button", onclick: () => apriScheda(a.o.cod)},
+        $("span", {class: "when"}, breve(a.d)),
+        $("span", {class: "what"}, a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
+        $("span", {class: "who"}, `${nomeCompleto(a.o.r)} · ${a.o.cod}`)))))),
+    $("section", {class: "section"}, S.cerca ? null : $("h2", {class: "label"}, S.filtro === "presenti" ? "In struttura" : "Tutti gli ospiti"), lista),
+    $("p", {class: "note"}, `${S.file.nome} · caricato il ${fmtData(new Date(S.file.quando))}` + (S.dati.protetto ? "" : " · file senza password, non salvato sul telefono"))
+  );
+  riempi();
+}
+
+function apriScheda(cod) { S.cod = cod; vistaScheda(); window.scrollTo(0, 0); }
+
+function vistaScheda() {
+  const cod = S.cod, o = S.dati.ospiti.find(x => x.cod === cod); if (!o) return vistaElenco();
+  const r = o.r, t = oggi();
+  const sub = [];
+  const nasc = campo(r, "Data di nascita");
+  if (nasc instanceof Date) { let e = t.getFullYear() - nasc.getFullYear(); if (t < new Date(t.getFullYear(), nasc.getMonth(), nasc.getDate())) e--; sub.push(`${e} anni`); }
+  for (const k of ["Nazionalità", "Lingua madre", "Assegnazione stanza/letto"]) { const v = testo(campo(r, k)); if (v) sub.push(v); }
+  const badges = [];
+  const usc = campo(r, "Data Uscita dalla Struttura", "Data uscita");
+  if (usc) { const d = testo(campo(r, "Destinazione")); badges.push({t: `Uscito il ${testo(usc)}${d ? " → " + d : ""}`, c: "b-bad"}); }
+  else { const a = campo(r, "Data arrivo in struttura", "Data arrivo"); badges.push({t: "In struttura" + (a instanceof Date ? ` da ${giorni(t, a)} giorni` : ""), c: "b-ok"}); }
+  badges.push(...avvisi(cod));
+
+  const schede = S.dati.fogli.map((f, i) => {
+    const righe = f.dati.get(cod) || [];
+    const multi = righe.length > 1 || norm(f.nome) === "registro interventi";
+    let corpo;
+    if (!righe.length) corpo = $("p", {class: "nodata"}, "Nessun dato ancora inserito.");
+    else if (!multi) corpo = $("dl", {class: "kv"}, f.campi.map(k => { const v = testo(righe[0][k]);
+      return $("div", {}, $("dt", {}, k), $("dd", {class: v ? null : "none"}, v || "—")); }));
+    else {
+      const kd = f.campi.find(k => norm(k) === "data");
+      const ord = kd ? [...righe].sort((a, b) => (b[kd] || 0) - (a[kd] || 0)) : righe;
+      corpo = $("div", {}, ord.map(x => $("div", {class: "entry"},
+        kd ? $("span", {class: "when"}, testo(x[kd])) : null,
+        $("dl", {class: "kv", style: "padding:0"}, f.campi.filter(k => k !== kd && testo(x[k])).map(k =>
+          $("div", {style: "border:0;padding-block:3px"}, $("dt", {}, k), $("dd", {}, testo(x[k]))))))));
+    }
+    return $("details", {class: "card", open: i === 0 || (multi && righe.length) ? true : null},
+      $("summary", {}, f.titolo, $("small", {}, righe.length ? (multi ? `${righe.length} ${righe.length === 1 ? "voce" : "voci"}` : "") : "vuoto")), corpo);
+  });
+
+  mostra(
+    $("header", {class: "top"}, $("div", {class: "toprow"},
+      $("button", {class: "back", type: "button", onclick: () => { S.cod = null; vistaElenco(); }}, "‹ Ospiti"),
+      $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca"))),
+    $("div", {class: "head"},
+      $("span", {class: "code muted"}, cod),
+      $("h2", {}, nomeCompleto(r)),
+      sub.length ? $("p", {class: "muted", style: "margin:0"}, sub.join("  ·  ")) : null,
+      $("div", {class: "badges"}, badges.map(b => $("span", {class: "badge " + b.c}, b.t)))),
+    schede,
+    $("button", {class: "btn ghost", type: "button", onclick: () => { S.cod = null; vistaElenco(); }}, "Torna all'elenco")
+  );
+}
+
+/* blocco automatico */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) S.nascostoDa = Date.now();
+  else if (S.dati && S.nascostoDa && Date.now() - S.nascostoDa > BLOCCO_MINUTI * 60000) blocca();
+});
+
+/* avvio */
+if (typeof XLSX === "undefined" || typeof aesjs === "undefined" || typeof sha512 === "undefined") {
+  mostra($("section", {class: "lock"}, $("h1", {}, "Accoglienza Tascabile"),
+    $("p", {class: "err"}, "Non riesco a caricare i componenti dell'app. Apri l'app una volta con la connessione attiva, poi funzionerà anche senza.")));
+} else vistaBlocco();
+
+/* funzionamento senza rete */
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
