@@ -132,10 +132,38 @@ button{cursor:pointer}
 .spin{width:20px;height:20px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.spin{animation:none}}
+.btns{display:flex;gap:8px}
+#stampa{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm 16mm}
+  :root{padding:0!important;color-scheme:light}
+  html,body{background:#FFFFFF!important;color:#111111!important}
+  body::before,#app{display:none!important}
+  #stampa{display:block;font:10.5pt/1.35 -apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;color:#111111}
+  .p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12mm;border-bottom:1.5pt solid #0E5755;padding-bottom:3mm;margin-bottom:4mm}
+  .p-head img{width:62mm;height:auto}
+  .p-head .p-id{text-align:right}
+  .p-head h1{font-size:17pt;margin:0;line-height:1.1}
+  .p-head p{margin:1mm 0 0;color:#444444}
+  .p-stato{margin:0 0 4mm;padding:2mm 3mm;background:#F1F4F3;border-left:2pt solid #0E5755}
+  .p-stato p{margin:.6mm 0}
+  #stampa h2{font-size:11.5pt;color:#0E5755;margin:5mm 0 1.5mm;break-after:avoid;border-bottom:.6pt solid #BBC6C3;padding-bottom:1mm}
+  #stampa table{width:100%;border-collapse:collapse}
+  #stampa th,#stampa td{text-align:left;vertical-align:top;padding:1.3mm 2mm;border-bottom:.4pt solid #D2D9D7}
+  #stampa tr{break-inside:avoid}
+  .p-kv th{width:38%;font-weight:normal;color:#555555}
+  .p-kv td{min-height:5mm}
+  .p-tab th{background:#E7EEEC;font-weight:bold;font-size:9.5pt}
+  .p-tab td{font-size:9.5pt}
+  .p-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .p-vuoto{color:#777777;margin:1mm 0}
+  .p-piede{margin-top:7mm;padding-top:2mm;border-top:.6pt solid #BBC6C3;font-size:8.5pt;color:#555555}
+}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
+<div id="stampa" aria-hidden="true"></div>
 
 <script src="xlsx.full.min.js"></script>
 <script src="aes.js"></script>
@@ -375,7 +403,7 @@ async function sblocca(password) {
   }
 }
 
-function blocca() { S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
+function blocca() { const st = document.getElementById("stampa"); if (st) st.replaceChildren(); S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
 
 function vistaElenco() {
   const t = oggi(), {ospiti} = S.dati;
@@ -410,7 +438,9 @@ function vistaElenco() {
 
   mostra(
     $("header", {class: "top"},
-      $("div", {class: "toprow"}, $("h1", {}, "Ospiti"), $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca")),
+      $("div", {class: "toprow"}, $("h1", {}, "Ospiti"), $("div", {class: "btns"},
+        $("button", {class: "iconbtn", type: "button", onclick: stampaPresenti}, "Stampa elenco"),
+        $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca"))),
       cerca,
       $("div", {class: "chips"}, chip("presenti", `Presenti ${presenti.length}`), chip("tutti", `Tutti ${ospiti.length}`))),
     S.cerca ? null : $("div", {class: "logo small"}, $("img", {src: "logo.png", alt: "Casa D. Carota"})),
@@ -428,6 +458,85 @@ function vistaElenco() {
     $("p", {class: "note"}, `${S.file.nome} · caricato il ${fmtData(new Date(S.file.quando))}` + (S.dati.protetto ? "" : " · file senza password, non salvato sul telefono"))
   );
   riempi();
+}
+
+/* ---------------- stampa ---------------- */
+function testaOspite(cod) {
+  const o = S.dati.ospiti.find(x => x.cod === cod), r = o.r, t = oggi(), sub = [], badges = [];
+  const nasc = campo(r, "Data di nascita");
+  if (nasc instanceof Date) { let e = t.getFullYear() - nasc.getFullYear(); if (t < new Date(t.getFullYear(), nasc.getMonth(), nasc.getDate())) e--; sub.push(`${e} anni`); }
+  for (const k of ["Nazionalità", "Lingua madre", "Assegnazione stanza/letto"]) { const v = testo(campo(r, k)); if (v) sub.push(v); }
+  const usc = campo(r, "Data Uscita dalla Struttura", "Data uscita");
+  if (usc) { const d = testo(campo(r, "Destinazione")); badges.push({t: `Uscito il ${testo(usc)}${d ? " → " + d : ""}`, c: "b-bad"}); }
+  else { const a = campo(r, "Data arrivo in struttura", "Data arrivo"); badges.push({t: "In struttura" + (a instanceof Date ? ` da ${giorni(t, a)} giorni` : ""), c: "b-ok"}); }
+  badges.push(...avvisi(cod));
+  return {r, sub, badges};
+}
+const oraStampa = () => { const d = new Date(); return `${fmtData(d)} alle ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+const piede = () => $("p", {class: "p-piede"}, `Stampato il ${oraStampa()} · Casa D. Carota · Documento riservato: contiene dati personali. Non lasciarlo incustodito e distruggilo quando non serve più.`);
+const intestazione = (titolo, sotto) => $("div", {class: "p-head"}, $("img", {src: "logo.png", alt: "Casa D. Carota"}),
+  $("div", {class: "p-id"}, $("h1", {}, titolo), sotto ? $("p", {}, sotto) : null));
+
+function stampa(nodi, nomeFile) {
+  const box = document.getElementById("stampa");
+  box.replaceChildren(...nodi.flat(Infinity).filter(n => n != null && n !== false));
+  const prima = document.title; document.title = nomeFile;
+  const fine = () => { document.title = prima; window.removeEventListener("afterprint", fine); };
+  window.addEventListener("afterprint", fine);
+  const img = box.querySelector("img");
+  const via = () => setTimeout(() => window.print(), 30);
+  if (img && !img.complete) { img.onload = via; img.onerror = via; } else via();
+}
+
+function stampaScheda(cod) {
+  const {r, sub, badges} = testaOspite(cod);
+  const sezioni = S.dati.fogli.map(f => {
+    const righe = f.dati.get(cod) || [];
+    const multi = righe.length > 1 || norm(f.nome) === "registro interventi";
+    let corpo;
+    if (!righe.length) corpo = $("p", {class: "p-vuoto"}, "Nessun dato inserito.");
+    else if (!multi) corpo = $("table", {class: "p-kv"}, f.campi.map(k => $("tr", {}, $("th", {}, k), $("td", {}, testo(righe[0][k])))));
+    else {
+      const kd = f.campi.find(k => norm(k) === "data");
+      const col = kd ? [kd, ...f.campi.filter(k => k !== kd)] : f.campi;
+      const ord = kd ? [...righe].sort((a, b) => (b[kd] || 0) - (a[kd] || 0)) : righe;
+      corpo = $("table", {class: "p-tab"}, $("tr", {}, col.map(k => $("th", {}, k))),
+        ord.map(x => $("tr", {}, col.map(k => $("td", {class: k === kd ? "p-num" : null}, testo(x[k]))))));
+    }
+    return [$("h2", {}, f.titolo), corpo];
+  });
+  stampa([
+    intestazione(nomeCompleto(r), [cod, ...sub].join("  ·  ")),
+    $("div", {class: "p-stato"}, badges.map(b => $("p", {}, b.t))),
+    sezioni, piede()
+  ], `Scheda ${cod} ${nomeCompleto(r)}`);
+}
+
+function stampaPresenti() {
+  const t = oggi();
+  const pres = S.dati.ospiti.filter(o => !uscito(o.r));
+  const agenda = [];
+  for (const o of pres) for (const a of avvisi(o.cod)) if (a.d) agenda.push({...a, o});
+  agenda.sort((a, b) => a.d - b.d);
+  const righe = pres.map((o, i) => {
+    const a = campo(o.r, "Data arrivo in struttura", "Data arrivo");
+    return $("tr", {},
+      $("td", {class: "p-num"}, i + 1), $("td", {class: "p-num"}, o.cod), $("td", {}, nomeCompleto(o.r)),
+      $("td", {}, testo(campo(o.r, "Nazionalità"))), $("td", {}, testo(campo(o.r, "Assegnazione stanza/letto", "stanza"))),
+      $("td", {class: "p-num"}, testo(a)), $("td", {class: "p-num"}, a instanceof Date ? giorni(t, a) : ""));
+  });
+  stampa([
+    intestazione("Ospiti presenti", `al ${fmtData(t)} · ${pres.length} ospiti`),
+    $("table", {class: "p-tab"},
+      $("tr", {}, ["N.", "Codice", "Cognome e nome", "Nazionalità", "Stanza / letto", "Arrivo", "Giorni"].map(h => $("th", {}, h))),
+      righe),
+    agenda.length ? [$("h2", {}, "Scadenze e appuntamenti"),
+      $("table", {class: "p-tab"},
+        $("tr", {}, ["Data", "Cosa", "Ospite", "Codice"].map(h => $("th", {}, h))),
+        agenda.map(a => $("tr", {}, $("td", {class: "p-num"}, fmtData(a.d)), $("td", {}, a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
+          $("td", {}, nomeCompleto(a.o.r)), $("td", {class: "p-num"}, a.o.cod))))] : null,
+    piede()
+  ], `Ospiti presenti ${fmtData(t).replace(/\//g, "-")}`);
 }
 
 function apriScheda(cod) { S.cod = cod; vistaScheda(); window.scrollTo(0, 0); }
@@ -467,7 +576,9 @@ function vistaScheda() {
   mostra(
     $("header", {class: "top"}, $("div", {class: "toprow"},
       $("button", {class: "back", type: "button", onclick: () => { S.cod = null; vistaElenco(); }}, "‹ Ospiti"),
-      $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca"))),
+      $("div", {class: "btns"},
+        $("button", {class: "iconbtn", type: "button", onclick: () => stampaScheda(cod)}, "Stampa"),
+        $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca")))),
     $("div", {class: "head"},
       $("span", {class: "code muted"}, cod),
       $("h2", {}, nomeCompleto(r)),
