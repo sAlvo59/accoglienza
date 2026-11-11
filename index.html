@@ -602,7 +602,14 @@ if (typeof XLSX === "undefined" || typeof aesjs === "undefined" || typeof sha512
 } else vistaBlocco();
 
 /* funzionamento senza rete */
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {});
+  // arriva una versione nuova: ricarico solo se l'app è ancora bloccata
+  let ricaricata = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!ricaricata && !S.dati) { ricaricata = true; location.reload(); }
+  });
+}
 </script>
 </body>
 </html>
