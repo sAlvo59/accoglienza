@@ -1,10 +1,11 @@
 // Tiene in memoria l'app sul telefono, così parte anche senza rete.
 // Con la connessione scarica sempre la pagina più recente; senza, usa la copia salvata.
 // Quando cambi un file dell'app, aumenta il numero di versione qui sotto.
-const VERSIONE = "accoglienza-v3";
+const VERSIONE = "accoglienza-v4";
 const FILE = ["./", "index.html", "manifest.webmanifest", "logo.png",
   "icona-180.png", "icona-192.png", "icona-512.png",
-  "xlsx.full.min.js", "aes.js", "sha512.min.js"];
+  "xlsx.full.min.js", "aes.js", "sha512.min.js",
+  "jspdf.umd.min.js", "jspdf.autotable.min.js", "DejaVuSans.ttf", "DejaVuSans-Bold.ttf"];
 
 self.addEventListener("install", e => {
   // cache: "reload" salta la cache del browser, così non salva copie vecchie

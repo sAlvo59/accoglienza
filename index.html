@@ -168,6 +168,8 @@ button{cursor:pointer}
 <script src="xlsx.full.min.js"></script>
 <script src="aes.js"></script>
 <script src="sha512.min.js"></script>
+<script src="jspdf.umd.min.js"></script>
+<script src="jspdf.autotable.min.js"></script>
 <script>
 "use strict";
 /* ---------------- impostazioni ---------------- */
@@ -394,6 +396,7 @@ async function sblocca(password) {
       chiaro = buf; // file senza password: lo leggo ma non lo salvo sul telefono
     }
     S.dati = costruisci(chiaro);
+    caricaRisorsePdf();
     S.dati.protetto = eCifrato(buf);
     S.busy = false; S.cod = null; vistaElenco();
   } catch (e) {
@@ -473,43 +476,120 @@ function testaOspite(cod) {
   return {r, sub, badges};
 }
 const oraStampa = () => { const d = new Date(); return `${fmtData(d)} alle ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
-const piede = () => $("p", {class: "p-piede"}, `Stampato il ${oraStampa()} · Casa D. Carota · Documento riservato: contiene dati personali. Non lasciarlo incustodito e distruggilo quando non serve più.`);
-const intestazione = (titolo, sotto) => $("div", {class: "p-head"}, $("img", {src: "logo.png", alt: "Casa D. Carota"}),
-  $("div", {class: "p-id"}, $("h1", {}, titolo), sotto ? $("p", {}, sotto) : null));
 
-function stampa(nodi, nomeFile) {
-  const box = document.getElementById("stampa");
-  box.replaceChildren(...nodi.flat(Infinity).filter(n => n != null && n !== false));
-  const prima = document.title; document.title = nomeFile;
-  const fine = () => { document.title = prima; window.removeEventListener("afterprint", fine); };
-  window.addEventListener("afterprint", fine);
-  const img = box.querySelector("img");
-  const via = () => setTimeout(() => window.print(), 30);
-  if (img && !img.complete) { img.onload = via; img.onerror = via; } else via();
+/* Il PDF si crea sul telefono e si apre con il pannello Condividi di iOS (Stampa, Salva su File, Mail).
+   Font e logo si caricano prima, così il PDF nasce subito al tocco del pulsante. */
+const PDF = {pronte: false, inCorso: false};
+async function caricaRisorsePdf() {
+  if (PDF.pronte || PDF.inCorso) return;
+  PDF.inCorso = true;
+  try {
+    const b64 = async u => {
+      const buf = new Uint8Array(await (await fetch(u)).arrayBuffer());
+      let s = ""; for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+      return btoa(s);
+    };
+    const [reg, bold, logo] = await Promise.all([b64("DejaVuSans.ttf"), b64("DejaVuSans-Bold.ttf"), b64("logo.png")]);
+    Object.assign(PDF, {reg, bold, logo: "data:image/png;base64," + logo, pronte: true});
+  } catch (e) { /* senza font speciali si usa quello standard */ }
+  finally { PDF.inCorso = false; }
+}
+const M = 14, LARG = 210, VERDE = [14, 87, 85];
+const fontPdf = () => PDF.pronte ? "DV" : "helvetica";
+function nuovoPdf() {
+  const doc = new window.jspdf.jsPDF({unit: "mm", format: "a4"});
+  if (PDF.pronte) {
+    doc.addFileToVFS("DV.ttf", PDF.reg); doc.addFont("DV.ttf", "DV", "normal");
+    doc.addFileToVFS("DVB.ttf", PDF.bold); doc.addFont("DVB.ttf", "DV", "bold");
+  }
+  doc.setFont(fontPdf(), "normal");
+  return doc;
+}
+function testataPdf(doc, titolo, sotto) {
+  const hLogo = 62 * 216 / 727;
+  if (PDF.logo) doc.addImage(PDF.logo, "PNG", M, 10, 62, hLogo);
+  doc.setFont(fontPdf(), "bold"); doc.setFontSize(16); doc.setTextColor(17);
+  const tl = doc.splitTextToSize(titolo, 108);
+  doc.text(tl, LARG - M, 17, {align: "right"});
+  let fondo = 17 + (tl.length - 1) * 6.5;
+  if (sotto) {
+    doc.setFont(fontPdf(), "normal"); doc.setFontSize(9.5); doc.setTextColor(70);
+    const sl = doc.splitTextToSize(sotto, 108);
+    doc.text(sl, LARG - M, fondo + 6, {align: "right"});
+    fondo += 6 + (sl.length - 1) * 4.2;
+  }
+  const y = Math.max(10 + hLogo, fondo) + 3;
+  doc.setDrawColor(...VERDE); doc.setLineWidth(0.5); doc.line(M, y, LARG - M, y);
+  return y + 6;
+}
+function titoloPdf(doc, y, t) {
+  if (y > 262) { doc.addPage(); y = 16; }
+  doc.setFont(fontPdf(), "bold"); doc.setFontSize(11.5); doc.setTextColor(...VERDE);
+  doc.text(t, M, y);
+  doc.setDrawColor(187, 198, 195); doc.setLineWidth(0.2); doc.line(M, y + 1.6, LARG - M, y + 1.6);
+  return y + 3.5;
+}
+const stileTab = y => ({startY: y, margin: {left: M, right: M, bottom: 18, top: 14}, theme: "plain", rowPageBreak: "avoid",
+  styles: {font: fontPdf(), fontSize: 9.5, cellPadding: 1.6, textColor: 20, lineColor: [210, 217, 215], lineWidth: {bottom: 0.2}},
+  headStyles: {font: fontPdf(), fontStyle: "bold", fillColor: [231, 238, 236], textColor: 20}});
+function piediPdf(doc) {
+  const n = doc.getNumberOfPages(), quando = oraStampa();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i); doc.setFont(fontPdf(), "normal"); doc.setFontSize(7.5); doc.setTextColor(95);
+    doc.setDrawColor(187, 198, 195); doc.setLineWidth(0.2); doc.line(M, 281, LARG - M, 281);
+    doc.text(`Stampato il ${quando} · Casa D. Carota · Documento riservato: contiene dati personali. Non lasciarlo incustodito e distruggilo quando non serve più.`, M, 285, {maxWidth: 158});
+    doc.text(`Pagina ${i} di ${n}`, LARG - M, 285, {align: "right"});
+  }
+}
+function consegnaPdf(doc, nome) {
+  nome = nome.replace(/[\\/:*?"<>|]/g, "-");
+  const blob = doc.output("blob");
+  let file = null;
+  try { file = new File([blob], nome + ".pdf", {type: "application/pdf"}); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({files: [file]})) {
+    navigator.share({files: [file], title: nome}).catch(e => { if (e && e.name !== "AbortError") apriPdf(blob, nome); });
+  } else apriPdf(blob, nome);
+}
+function apriPdf(blob, nome) {
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank");
+  if (!w) { const a = $("a", {href: url, download: nome + ".pdf"}); document.body.append(a); a.click(); a.remove(); }
 }
 
 function stampaScheda(cod) {
   const {r, sub, badges} = testaOspite(cod);
-  const sezioni = S.dati.fogli.map(f => {
-    const righe = f.dati.get(cod) || [];
-    const multi = righe.length > 1 || norm(f.nome) === "registro interventi";
-    let corpo;
-    if (!righe.length) corpo = $("p", {class: "p-vuoto"}, "Nessun dato inserito.");
-    else if (!multi) corpo = $("table", {class: "p-kv"}, f.campi.map(k => $("tr", {}, $("th", {}, k), $("td", {}, testo(righe[0][k])))));
-    else {
+  const doc = nuovoPdf();
+  let y = testataPdf(doc, nomeCompleto(r), [cod, ...sub].join("  ·  "));
+  // riquadro dello stato
+  doc.setFont(fontPdf(), "normal"); doc.setFontSize(9.5);
+  const righe = badges.flatMap(b => doc.splitTextToSize(b.t, 170));
+  const h = righe.length * 4.6 + 3.5;
+  doc.setFillColor(241, 244, 243); doc.rect(M, y - 4, LARG - 2 * M, h, "F");
+  doc.setFillColor(...VERDE); doc.rect(M, y - 4, 0.8, h, "F");
+  doc.setTextColor(20); doc.text(righe, M + 4, y + 0.2, {lineHeightFactor: 1.35});
+  y += h + 4;
+  for (const f of S.dati.fogli) {
+    const elenco = f.dati.get(cod) || [];
+    const multi = elenco.length > 1 || norm(f.nome) === "registro interventi";
+    y = titoloPdf(doc, y, f.titolo);
+    if (!elenco.length) {
+      doc.setFont(fontPdf(), "normal"); doc.setFontSize(9.5); doc.setTextColor(120);
+      doc.text("Nessun dato inserito.", M, y + 4); y += 11; continue;
+    }
+    if (!multi) {
+      doc.autoTable({...stileTab(y), body: f.campi.map(k => [k, testo(elenco[0][k])]),
+        columnStyles: {0: {cellWidth: 64, textColor: 85}}});
+    } else {
       const kd = f.campi.find(k => norm(k) === "data");
       const col = kd ? [kd, ...f.campi.filter(k => k !== kd)] : f.campi;
-      const ord = kd ? [...righe].sort((a, b) => (b[kd] || 0) - (a[kd] || 0)) : righe;
-      corpo = $("table", {class: "p-tab"}, $("tr", {}, col.map(k => $("th", {}, k))),
-        ord.map(x => $("tr", {}, col.map(k => $("td", {class: k === kd ? "p-num" : null}, testo(x[k]))))));
+      const ord = kd ? [...elenco].sort((a, b) => (b[kd] || 0) - (a[kd] || 0)) : elenco;
+      doc.autoTable({...stileTab(y), head: [col], body: ord.map(x => col.map(k => testo(x[k]))),
+        styles: {...stileTab(y).styles, fontSize: 8.8}});
     }
-    return [$("h2", {}, f.titolo), corpo];
-  });
-  stampa([
-    intestazione(nomeCompleto(r), [cod, ...sub].join("  ·  ")),
-    $("div", {class: "p-stato"}, badges.map(b => $("p", {}, b.t))),
-    sezioni, piede()
-  ], `Scheda ${cod} ${nomeCompleto(r)}`);
+    y = doc.lastAutoTable.finalY + 7;
+  }
+  piediPdf(doc);
+  consegnaPdf(doc, `Scheda ${cod} ${nomeCompleto(r)}`);
 }
 
 function stampaPresenti() {
@@ -518,25 +598,24 @@ function stampaPresenti() {
   const agenda = [];
   for (const o of pres) for (const a of avvisi(o.cod)) if (a.d) agenda.push({...a, o});
   agenda.sort((a, b) => a.d - b.d);
-  const righe = pres.map((o, i) => {
-    const a = campo(o.r, "Data arrivo in struttura", "Data arrivo");
-    return $("tr", {},
-      $("td", {class: "p-num"}, i + 1), $("td", {class: "p-num"}, o.cod), $("td", {}, nomeCompleto(o.r)),
-      $("td", {}, testo(campo(o.r, "Nazionalità"))), $("td", {}, testo(campo(o.r, "Assegnazione stanza/letto", "stanza"))),
-      $("td", {class: "p-num"}, testo(a)), $("td", {class: "p-num"}, a instanceof Date ? giorni(t, a) : ""));
-  });
-  stampa([
-    intestazione("Ospiti presenti", `al ${fmtData(t)} · ${pres.length} ospiti`),
-    $("table", {class: "p-tab"},
-      $("tr", {}, ["N.", "Codice", "Cognome e nome", "Nazionalità", "Stanza / letto", "Arrivo", "Giorni"].map(h => $("th", {}, h))),
-      righe),
-    agenda.length ? [$("h2", {}, "Scadenze e appuntamenti"),
-      $("table", {class: "p-tab"},
-        $("tr", {}, ["Data", "Cosa", "Ospite", "Codice"].map(h => $("th", {}, h))),
-        agenda.map(a => $("tr", {}, $("td", {class: "p-num"}, fmtData(a.d)), $("td", {}, a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
-          $("td", {}, nomeCompleto(a.o.r)), $("td", {class: "p-num"}, a.o.cod))))] : null,
-    piede()
-  ], `Ospiti presenti ${fmtData(t).replace(/\//g, "-")}`);
+  const doc = nuovoPdf();
+  let y = testataPdf(doc, "Ospiti presenti", `al ${fmtData(t)} · ${pres.length} ospiti`);
+  doc.autoTable({...stileTab(y),
+    head: [["N.", "Codice", "Cognome e nome", "Nazionalità", "Stanza / letto", "Arrivo", "Giorni"]],
+    body: pres.map((o, i) => { const a = campo(o.r, "Data arrivo in struttura", "Data arrivo");
+      return [i + 1, o.cod, nomeCompleto(o.r), testo(campo(o.r, "Nazionalità")), testo(campo(o.r, "Assegnazione stanza/letto", "stanza")),
+        testo(a), a instanceof Date ? giorni(t, a) : ""]; }),
+    styles: {...stileTab(y).styles, fontSize: 9},
+    columnStyles: {0: {cellWidth: 9}, 1: {cellWidth: 30}, 4: {cellWidth: 26}, 5: {cellWidth: 23}, 6: {cellWidth: 16, halign: "right"}}});
+  y = doc.lastAutoTable.finalY + 8;
+  if (agenda.length) {
+    y = titoloPdf(doc, y, "Scadenze e appuntamenti");
+    doc.autoTable({...stileTab(y), head: [["Data", "Cosa", "Ospite", "Codice"]],
+      body: agenda.map(a => [fmtData(a.d), a.t.replace(/: \d\d\/\d\d\/\d{4}$/, ""), nomeCompleto(a.o.r), a.o.cod]),
+      columnStyles: {0: {cellWidth: 22}, 3: {cellWidth: 29}}});
+  }
+  piediPdf(doc);
+  consegnaPdf(doc, `Ospiti presenti ${fmtData(t).replace(/\//g, "-")}`);
 }
 
 function apriScheda(cod) { S.cod = cod; vistaScheda(); window.scrollTo(0, 0); }
