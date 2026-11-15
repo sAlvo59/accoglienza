@@ -359,7 +359,7 @@ async function vistaBlocco() {
   if (!S.file) S.file = await leggiFile();
   const inp = $("input", {type: "file", id: "file", class: "hide-input", accept: ".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     onchange: async e => { const f = e.target.files[0]; if (!f) return;
-      S.file = {nome: f.name, quando: Date.now(), buf: new Uint8Array(await f.arrayBuffer())}; S.err = ""; vistaBlocco(); }});
+      S.file = {nome: f.name, quando: Date.now(), modificato: f.lastModified || null, buf: new Uint8Array(await f.arrayBuffer())}; S.err = ""; vistaBlocco(); }});
   const scegli = $("button", {class: "btn ghost", type: "button", onclick: () => inp.click()}, S.file ? "Scegli un altro file" : "Scegli il file Excel");
   const pw = $("input", {class: "input", id: "pw", type: "password", autocomplete: "current-password", placeholder: "Password del file", enterkeyhint: "go"});
   const apri = $("button", {class: "btn", type: "submit", disabled: S.busy || !S.file}, "Apri");
@@ -370,7 +370,7 @@ async function vistaBlocco() {
     $("h1", {}, "Accoglienza Tascabile"),
     S.file ? $("div", {class: "filebox"}, $("div", {},
       $("b", {}, S.file.nome),
-      $("span", {class: "note"}, `caricato il ${fmtData(new Date(S.file.quando))}`))) :
+      $("span", {class: "note"}, etichettaFile(S.file)))) :
       $("p", {class: "muted"}, "Scegli il tuo DataBase_Accoglienza.xlsx da iCloud Drive o da File. Il file resta cifrato sul telefono e si apre solo con la password."),
     inp, scegli,
     S.file ? form : null,
@@ -391,7 +391,7 @@ async function sblocca(password) {
     if (eCifrato(buf)) {
       if (!password) throw new Error("Scrivi la password del file.");
       chiaro = decifra(buf, password);
-      if (!(S.file.salvato)) { S.file.salvato = await salvaFile({nome: S.file.nome, quando: S.file.quando, buf}); }
+      if (!(S.file.salvato)) { S.file.salvato = await salvaFile({nome: S.file.nome, quando: S.file.quando, modificato: S.file.modificato, buf}); }
     } else {
       chiaro = buf; // file senza password: lo leggo ma non lo salvo sul telefono
     }
@@ -458,7 +458,7 @@ function vistaElenco() {
         $("span", {class: "what"}, a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
         $("span", {class: "who"}, `${nomeCompleto(a.o.r)} · ${a.o.cod}`)))))),
     $("section", {class: "section"}, S.cerca ? null : $("h2", {class: "label"}, S.filtro === "presenti" ? "In struttura" : "Tutti gli ospiti"), lista),
-    $("p", {class: "note"}, `${S.file.nome} · caricato il ${fmtData(new Date(S.file.quando))}` + (S.dati.protetto ? "" : " · file senza password, non salvato sul telefono"))
+    $("p", {class: "note"}, `${S.file.nome} · ${etichettaFile(S.file)}` + (S.dati.protetto ? "" : " · file senza password, non salvato sul telefono"))
   );
   riempi();
 }
@@ -475,6 +475,8 @@ function testaOspite(cod) {
   badges.push(...avvisi(cod));
   return {r, sub, badges};
 }
+const dataOra = ms => { const d = new Date(ms); return `${fmtData(d)} alle ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+const etichettaFile = f => f.modificato ? `file salvato il ${dataOra(f.modificato)}` : `scelto il ${fmtData(new Date(f.quando))}`;
 const oraStampa = () => { const d = new Date(); return `${fmtData(d)} alle ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
 
 /* Il PDF si crea sul telefono e si apre con il pannello Condividi di iOS (Stampa, Salva su File, Mail).
