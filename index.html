@@ -73,6 +73,8 @@ button{cursor:pointer}
 .logo{display:block;background:#FFFFFF;border-radius:14px;padding:10px 12px;border:1px solid var(--line)}
 .logo img{display:block;width:100%;height:auto}
 .logo.small{padding:6px 8px;border-radius:10px;margin-block:4px 14px}
+.avviso{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:12px 14px;margin-block:4px 14px;font-size:var(--s-0);line-height:1.45}
+.avviso b{display:block;font-size:var(--s-1);margin-bottom:4px}
 /* testata elenco */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 10px;display:grid;gap:10px}
 .toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -446,6 +448,9 @@ function vistaElenco() {
         $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca"))),
       cerca,
       $("div", {class: "chips"}, chip("presenti", `Presenti ${presenti.length}`), chip("tutti", `Tutti ${ospiti.length}`))),
+    S.dati.protetto ? null : $("div", {class: "avviso", role: "alert"},
+      $("b", {}, "Questo file non ha la password."),
+      " L'app lo mostra adesso, ma non lo conserva: alla prossima apertura torna alla copia protetta precedente. Sul Mac apri il file in Excel, menu File, Password, scrivi la password di apertura e salva. Poi sceglilo di nuovo qui."),
     S.cerca ? null : $("div", {class: "logo small"}, $("img", {src: "logo.png", alt: "Casa D. Carota"})),
     S.cerca ? null : $("div", {class: "stats"},
       $("div", {class: "stat"}, $("b", {}, presenti.length), $("span", {}, "presenti")),
