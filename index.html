@@ -421,18 +421,16 @@ function esportaCalendario(cat, tutte) {
   const blob = new Blob([creaIcs(ev, nomeCal)], {type: "text/calendar"});
   const segna = () => { ev.forEach(e => fatti.add(e.uid)); lsSet(LS_CAL, JSON.stringify([...fatti])); };
   const conLink = () => {
-    S.msgCal = {t: `${ev.length} ${ev.length === 1 ? "scadenza pronta" : "scadenze pronte"} per il calendario ${nomeCal}. Tocca il pulsante qui sotto, poi Aggiungi tutto e scegli ${nomeCal}.`,
-      link: {url: URL.createObjectURL(blob), nome: nomeFile, dopo: segna}};
+    let file = null;
+    try { file = new File([blob], nomeFile, {type: "text/calendar"}); } catch (e) {}
+    let puoCondividere = false;
+    try { puoCondividere = !!(file && navigator.canShare && navigator.canShare({files: [file]})); } catch (e) {}
+    S.msgCal = {t: `${ev.length} ${ev.length === 1 ? "scadenza pronta" : "scadenze pronte"} per il calendario ${nomeCal}. Tocca Apri nel Calendario: compare Aggiungi tutto, toccalo e scegli ${nomeCal}. Se non compare, usa Invia per email e apri l'allegato dalla mail.`,
+      link: {url: URL.createObjectURL(blob), nome: nomeFile, dopo: segna},
+      mail: puoCondividere ? () => navigator.share({files: [file], title: nomeCal}).then(segna).catch(() => {}) : null};
     vistaElenco();
   };
-  let file = null;
-  try { file = new File([blob], nomeFile, {type: "text/calendar"}); } catch (e) {}
-  let ok = false;
-  try { ok = !!(file && navigator.canShare && navigator.canShare({files: [file]})); } catch (e) {}
-  if (!ok) return conLink();
-  navigator.share({files: [file], title: nomeCal})
-    .then(() => { segna(); S.msgCal = {t: `Fatto. Se nel pannello hai scelto Salva su File, apri il file dall'app File e tocca Aggiungi tutto.`}; vistaElenco(); })
-    .catch(e => { if (!e || e.name !== "AbortError") conLink(); });
+  return conLink();
 }
 function condividiFile(blob, nomeFile, tipo, fatto) {
   let file = null;
@@ -513,7 +511,8 @@ function sezioneCalendario() {
     $("button", {class: "btn giur", type: "button", onclick: () => esportaCalendario("giur")}, "Scadenze giuridiche", $("small", {}, sotto(g))),
     $("button", {class: "btn san", type: "button", onclick: () => esportaCalendario("san")}, "Scadenze sanitarie", $("small", {}, sotto(sn))),
     msg ? $("div", {class: "msgcal", role: "status"}, msg.t,
-      msg.link ? $("a", {class: "btn", href: msg.link.url, download: msg.link.nome, onclick: () => msg.link.dopo()}, "Apri il file del calendario") : null) : null,
+      msg.link ? $("a", {class: "btn", href: msg.link.url, download: msg.link.nome, onclick: () => msg.link.dopo()}, "Apri nel Calendario") : null,
+      msg.mail ? $("button", {class: "btn ghost", type: "button", onclick: msg.mail}, "Invia per email") : null) : null,
     (g.tot || sn.tot) && !(g.nuove || sn.nuove) ? $("button", {class: "linkbtn", type: "button", onclick: () => { lsSet(LS_CAL, "[]"); vistaElenco(); }}, "Ho cancellato i calendari: riaggiungi tutto") : null);
 }
 
