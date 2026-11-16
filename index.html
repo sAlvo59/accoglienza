@@ -127,6 +127,8 @@ button{cursor:pointer}
 .cal{display:grid;gap:10px}
 .cal .btn.giur{background:var(--info);color:var(--surface)} .cal .btn.san{background:var(--san);color:var(--surface)}
 .cal .btn small{display:block;font-weight:400;font-size:var(--s-0);opacity:.9}
+.msgcal{display:grid;gap:10px;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;font-size:var(--s-0)}
+.msgcal .btn{text-decoration:none;text-align:center;display:block}
 .linkbtn{appearance:none;border:0;background:none;color:var(--accent);font-weight:700;font-size:var(--s-0);padding:4px 0;justify-self:start;text-decoration:underline}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
 .card > summary{list-style:none;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:700;font-size:var(--s-2);cursor:pointer}
@@ -411,11 +413,26 @@ function creaIcs(eventi, nomeCal) {
 function esportaCalendario(cat, tutte) {
   const fatti = esportati(), tuttiEv = eventiCalendario(cat);
   const ev = tutte ? tuttiEv : tuttiEv.filter(e => !fatti.has(e.uid));
-  if (!ev.length) { S.msgCal = `Nessuna scadenza ${cat === "san" ? "sanitaria" : "giuridica"} nuova da aggiungere.`; return vistaElenco(); }
+  const agg = cat === "san" ? "sanitaria" : "giuridica";
+  if (!tuttiEv.length) { S.msgCal = {t: `Nel file non c'è nessuna scadenza ${agg} futura. Quando inserirai le date in Excel, compariranno qui.`}; return vistaElenco(); }
+  if (!ev.length) { S.msgCal = {t: `Le scadenze ${cat === "san" ? "sanitarie" : "giuridiche"} sono già tutte nel calendario. Non c'è niente di nuovo da aggiungere.`}; return vistaElenco(); }
   const nomeCal = cat === "san" ? "CAS Sanitario" : "CAS Giuridico";
+  const nomeFile = `${nomeCal} ${fmtData(oggi()).replace(/\//g, "-")}.ics`;
   const blob = new Blob([creaIcs(ev, nomeCal)], {type: "text/calendar"});
-  const segna = () => { ev.forEach(e => fatti.add(e.uid)); lsSet(LS_CAL, JSON.stringify([...fatti])); S.msgCal = `${ev.length} ${ev.length === 1 ? "scadenza pronta" : "scadenze pronte"} per il calendario ${nomeCal}.`; vistaElenco(); };
-  condividiFile(blob, `${nomeCal} ${fmtData(oggi()).replace(/\//g, "-")}.ics`, "text/calendar", segna);
+  const segna = () => { ev.forEach(e => fatti.add(e.uid)); lsSet(LS_CAL, JSON.stringify([...fatti])); };
+  const conLink = () => {
+    S.msgCal = {t: `${ev.length} ${ev.length === 1 ? "scadenza pronta" : "scadenze pronte"} per il calendario ${nomeCal}. Tocca il pulsante qui sotto, poi Aggiungi tutto e scegli ${nomeCal}.`,
+      link: {url: URL.createObjectURL(blob), nome: nomeFile, dopo: segna}};
+    vistaElenco();
+  };
+  let file = null;
+  try { file = new File([blob], nomeFile, {type: "text/calendar"}); } catch (e) {}
+  let ok = false;
+  try { ok = !!(file && navigator.canShare && navigator.canShare({files: [file]})); } catch (e) {}
+  if (!ok) return conLink();
+  navigator.share({files: [file], title: nomeCal})
+    .then(() => { segna(); S.msgCal = {t: `Fatto. Se nel pannello hai scelto Salva su File, apri il file dall'app File e tocca Aggiungi tutto.`}; vistaElenco(); })
+    .catch(e => { if (!e || e.name !== "AbortError") conLink(); });
 }
 function condividiFile(blob, nomeFile, tipo, fatto) {
   let file = null;
@@ -489,13 +506,14 @@ function sezioneCalendario() {
   const conta = cat => { const ev = eventiCalendario(cat); return {tot: ev.length, nuove: ev.filter(e => !fatti.has(e.uid)).length}; };
   const g = conta("giur"), sn = conta("san");
   const sotto = c => c.tot === 0 ? "nessuna in programma" : c.nuove ? `${c.nuove} ${c.nuove === 1 ? "nuova" : "nuove"} da aggiungere` : "tutte già aggiunte";
-  const msg = S.msgCal; S.msgCal = "";
+  const msg = S.msgCal; S.msgCal = null;
   return $("section", {class: "section cal"},
     $("h2", {class: "label"}, "Avvisi nel Calendario"),
     $("p", {class: "note", style: "margin:0"}, "Mette le scadenze nel Calendario del telefono, con un avviso il giorno prima. Per i documenti anche un avviso un mese prima."),
     $("button", {class: "btn giur", type: "button", onclick: () => esportaCalendario("giur")}, "Scadenze giuridiche", $("small", {}, sotto(g))),
     $("button", {class: "btn san", type: "button", onclick: () => esportaCalendario("san")}, "Scadenze sanitarie", $("small", {}, sotto(sn))),
-    msg ? $("p", {class: "note", role: "status", style: "margin:0"}, msg) : null,
+    msg ? $("div", {class: "msgcal", role: "status"}, msg.t,
+      msg.link ? $("a", {class: "btn", href: msg.link.url, download: msg.link.nome, onclick: () => msg.link.dopo()}, "Apri il file del calendario") : null) : null,
     (g.tot || sn.tot) && !(g.nuove || sn.nuove) ? $("button", {class: "linkbtn", type: "button", onclick: () => { lsSet(LS_CAL, "[]"); vistaElenco(); }}, "Ho cancellato i calendari: riaggiungi tutto") : null);
 }
 
