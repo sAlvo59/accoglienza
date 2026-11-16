@@ -20,7 +20,7 @@
   --bg:#EDF1F0; --surface:#FFFFFF; --fg:#14201E; --muted:#56635F; --line:#D5DDDA;
   --accent:#0E5755; --accent-soft:#D4E6E4; --on-accent:#FFFFFF;
   --ok:#25643A; --ok-soft:#DBEEDF; --warn:#7A5200; --warn-soft:#F6E7C4;
-  --bad:#9A2A2A; --bad-soft:#F5DADA; --info:#20477A; --info-soft:#DCE6F4;
+  --bad:#9A2A2A; --bad-soft:#F5DADA; --info:#20477A; --info-soft:#DCE6F4; --san:#7A3E8E; --san-soft:#F0E1F3;
   --f-body:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
   --f-code:ui-monospace,"SF Mono",Menlo,monospace;
   --s-0:15px; --s-1:18px; --s-2:20px; --s-3:24px; --s-4:32px;
@@ -29,12 +29,12 @@
   --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
   --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
   --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
-  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; color-scheme:dark}}
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
   --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
   --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
-  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; color-scheme:dark}
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; color-scheme:dark}
 
 *{box-sizing:border-box}
 html,body{min-height:100%;margin:0}
@@ -116,6 +116,18 @@ button{cursor:pointer}
 .badge{font-size:var(--s-0);font-weight:700;padding:6px 11px;border-radius:8px;line-height:1.25}
 .b-ok{background:var(--ok-soft);color:var(--ok)} .b-bad{background:var(--bad-soft);color:var(--bad)}
 .b-warn{background:var(--warn-soft);color:var(--warn)} .b-info{background:var(--info-soft);color:var(--info)}
+.b-giur{background:var(--info-soft);color:var(--info)} .b-san{background:var(--san-soft);color:var(--san)}
+.agenda li{border-left:5px solid transparent}
+.agenda li.cat-giur{border-left-color:var(--info)} .agenda li.cat-san{border-left-color:var(--san)}
+.agenda .tipo{font-size:var(--s-0);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.cat-giur .tipo{color:var(--info)} .cat-san .tipo{color:var(--san)}
+.agenda li.scaduta .when{color:var(--bad)}
+.legenda{display:flex;gap:8px;flex-wrap:wrap}
+.legenda span{font-size:var(--s-0);font-weight:700;padding:4px 10px;border-radius:999px}
+.cal{display:grid;gap:10px}
+.cal .btn.giur{background:var(--info);color:var(--surface)} .cal .btn.san{background:var(--san);color:var(--surface)}
+.cal .btn small{display:block;font-weight:400;font-size:var(--s-0);opacity:.9}
+.linkbtn{appearance:none;border:0;background:none;color:var(--accent);font-weight:700;font-size:var(--s-0);padding:4px 0;justify-self:start;text-decoration:underline}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
 .card > summary{list-style:none;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:700;font-size:var(--s-2);cursor:pointer}
 .card > summary::-webkit-details-marker{display:none}
@@ -333,23 +345,85 @@ function campo(riga, ...nomi) {
 const nomeCompleto = r => `${String(testo(campo(r, "Cognome"))).toUpperCase()} ${testo(campo(r, "Nome"))}`.trim();
 const uscito = r => !!campo(r, "Data Uscita dalla Struttura", "Data uscita");
 
+/* Ogni data viene classificata: giuridica (blu) o sanitaria (prugna).
+   Le colonne nuove con date si riconoscono dal foglio o dalle parole nel titolo. */
+function categoria(foglio, chiave) {
+  const fn = norm(foglio), kn = norm(chiave);
+  if (fn === "registro interventi" || fn === "anagrafica") return null;
+  if (fn.includes("salute") || /visita|controllo|terapia|vaccin|esame|sanitari|medic|specialist|ricovero|stp/.test(kn)) return "san";
+  if (fn.includes("giuridic") || /scadenza|questura|commissione|permesso|ricorso|udienza|tribunale|prefettura/.test(kn)) return "giur";
+  return null;
+}
+const NOMI_CAT = {giur: "Giuridico", san: "Sanitario"};
+const etichettaCampo = k => { const x = String(k).replace(/^Data\s+/i, "").replace(/^Appuntamento\s+/i, "").trim(); return x.charAt(0).toUpperCase() + x.slice(1); };
+
 function avvisi(cod) {
   const out = [], t = oggi();
   for (const f of S.dati.fogli) for (const r of (f.dati.get(cod) || [])) for (const [k, v] of Object.entries(r)) {
     const kn = norm(k);
-    if (kn.includes("scadenza") && v instanceof Date) {
-      const g = giorni(v, t);
-      if (g < 0) out.push({t: `${k.replace(/^Data /i, "")} scaduto il ${fmtData(v)}`, c: "b-bad", d: v, k: "scad"});
-      else if (g <= GIORNI_SCADENZA) out.push({t: `${k.replace(/^Data /i, "")}: ${fmtData(v)}`, c: "b-warn", d: v, k: "scad"});
+    if (v instanceof Date) {
+      const cat = categoria(f.nome, k);
+      if (cat) {
+        const g = giorni(v, t), scad = kn.includes("scadenza"), nome = (x => x.charAt(0).toUpperCase() + x.slice(1))(k.replace(/^Data /i, ""));
+        if (g < 0) { if (scad) out.push({t: `${nome} scaduta il ${fmtData(v)}`, c: "b-bad", d: v, k: "scad", cat, campo: k, scaduta: true}); }
+        else if (!scad || g <= GIORNI_SCADENZA) out.push({t: `${nome}: ${fmtData(v)}`, c: cat === "san" ? "b-san" : "b-giur", d: v, k: scad ? "scad" : "app", cat, campo: k});
+        else out.push({t: `${nome}: ${fmtData(v)}`, d: v, k: "scad", cat, campo: k, lontana: true});
+      }
     }
-    if (kn.includes("appuntamento") && v instanceof Date && v >= t && norm(f.nome) !== "registro interventi")
-      out.push({t: `${k.replace(/^Data /i, "")}: ${fmtData(v)}`, c: "b-info", d: v, k: "app"});
     if (kn === "allergie" && v && !["nessuna", "no", "-", "n/a"].includes(norm(v)))
       out.push({t: `Allergie: ${testo(v)}`, c: "b-bad"});
     if (kn.includes("supporto psicologico") && norm(v).startsWith("s"))
-      out.push({t: "Supporto psicologico attivo", c: "b-warn"});
+      out.push({t: "Supporto psicologico attivo", c: "b-san"});
   }
   return out;
+}
+
+/* ---------------- calendario ---------------- */
+const LS_CAL = "cal-esportati";
+const esportati = () => { try { return new Set(JSON.parse(lsGet(LS_CAL) || "[]")); } catch { return new Set(); } };
+const ymd = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+function eventiCalendario(cat) {
+  const t = oggi(), ev = [];
+  for (const o of S.dati.ospiti.filter(x => !uscito(x.r)))
+    for (const a of avvisi(o.cod))
+      if (a.cat === cat && a.d && !a.scaduta && giorni(a.d, t) >= 0)
+        ev.push({uid: `${o.cod}-${norm(a.campo).replace(/[^a-z0-9]+/g, "-")}-${ymd(a.d)}@casa-dcarota`, cod: o.cod, d: a.d, campo: a.campo, scad: a.k === "scad", cat});
+  return ev.sort((x, y) => x.d - y.d);
+}
+function testoIcs(s) { return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
+function piega(riga) { const out = []; while (riga.length > 60) { out.push(riga.slice(0, 60)); riga = " " + riga.slice(60); } out.push(riga); return out.join("\r\n"); }
+function creaIcs(eventi, nomeCal) {
+  const ora = new Date(), stamp = ora.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Casa D. Carota//Accoglienza Tascabile//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + testoIcs(nomeCal)];
+  for (const e of eventi) {
+    const fine = new Date(e.d); fine.setDate(fine.getDate() + 1);
+    const titolo = `${etichettaCampo(e.campo)} · ${e.cod}`;
+    const allarmi = e.scad ? ["-P29DT15H", "-PT15H"] : ["-PT15H", "PT8H"];
+    L.push("BEGIN:VEVENT", "UID:" + e.uid, "DTSTAMP:" + stamp, "DTSTART;VALUE=DATE:" + ymd(e.d), "DTEND;VALUE=DATE:" + ymd(fine),
+      "SUMMARY:" + testoIcs(titolo), "DESCRIPTION:" + testoIcs(`${e.campo} per l'ospite ${e.cod}. Apri la scheda nell'app D. Carota per i dettagli.`),
+      "CATEGORIES:" + NOMI_CAT[e.cat], "TRANSP:TRANSPARENT");
+    for (const tr of allarmi) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + testoIcs(titolo), "TRIGGER:" + tr, "END:VALARM");
+    L.push("END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  return L.map(piega).join("\r\n") + "\r\n";
+}
+function esportaCalendario(cat, tutte) {
+  const fatti = esportati(), tuttiEv = eventiCalendario(cat);
+  const ev = tutte ? tuttiEv : tuttiEv.filter(e => !fatti.has(e.uid));
+  if (!ev.length) { S.msgCal = `Nessuna scadenza ${cat === "san" ? "sanitaria" : "giuridica"} nuova da aggiungere.`; return vistaElenco(); }
+  const nomeCal = cat === "san" ? "CAS Sanitario" : "CAS Giuridico";
+  const blob = new Blob([creaIcs(ev, nomeCal)], {type: "text/calendar"});
+  const segna = () => { ev.forEach(e => fatti.add(e.uid)); lsSet(LS_CAL, JSON.stringify([...fatti])); S.msgCal = `${ev.length} ${ev.length === 1 ? "scadenza pronta" : "scadenze pronte"} per il calendario ${nomeCal}.`; vistaElenco(); };
+  condividiFile(blob, `${nomeCal} ${fmtData(oggi()).replace(/\//g, "-")}.ics`, "text/calendar", segna);
+}
+function condividiFile(blob, nomeFile, tipo, fatto) {
+  let file = null;
+  try { file = new File([blob], nomeFile, {type: tipo}); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({files: [file]})) {
+    navigator.share({files: [file], title: nomeFile}).then(() => fatto && fatto())
+      .catch(e => { if (e && e.name !== "AbortError") { apriPdf(blob, nomeFile.replace(/\.\w+$/, "")); fatto && fatto(); } });
+  } else { apriPdf(blob, nomeFile.replace(/\.\w+$/, "")); fatto && fatto(); }
 }
 
 /* ---------------- stato e viste ---------------- */
@@ -410,13 +484,28 @@ async function sblocca(password) {
 
 function blocca() { const st = document.getElementById("stampa"); if (st) st.replaceChildren(); S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
 
+function sezioneCalendario() {
+  const fatti = esportati();
+  const conta = cat => { const ev = eventiCalendario(cat); return {tot: ev.length, nuove: ev.filter(e => !fatti.has(e.uid)).length}; };
+  const g = conta("giur"), sn = conta("san");
+  const sotto = c => c.tot === 0 ? "nessuna in programma" : c.nuove ? `${c.nuove} ${c.nuove === 1 ? "nuova" : "nuove"} da aggiungere` : "tutte già aggiunte";
+  const msg = S.msgCal; S.msgCal = "";
+  return $("section", {class: "section cal"},
+    $("h2", {class: "label"}, "Avvisi nel Calendario"),
+    $("p", {class: "note", style: "margin:0"}, "Mette le scadenze nel Calendario del telefono, con un avviso il giorno prima. Per i documenti anche un avviso un mese prima."),
+    $("button", {class: "btn giur", type: "button", onclick: () => esportaCalendario("giur")}, "Scadenze giuridiche", $("small", {}, sotto(g))),
+    $("button", {class: "btn san", type: "button", onclick: () => esportaCalendario("san")}, "Scadenze sanitarie", $("small", {}, sotto(sn))),
+    msg ? $("p", {class: "note", role: "status", style: "margin:0"}, msg) : null,
+    (g.tot || sn.tot) && !(g.nuove || sn.nuove) ? $("button", {class: "linkbtn", type: "button", onclick: () => { lsSet(LS_CAL, "[]"); vistaElenco(); }}, "Ho cancellato i calendari: riaggiungi tutto") : null);
+}
+
 function vistaElenco() {
   const t = oggi(), {ospiti} = S.dati;
   const presenti = ospiti.filter(o => !uscito(o.r));
   const usciti30 = ospiti.filter(o => { const d = campo(o.r, "Data Uscita dalla Struttura", "Data uscita"); return d instanceof Date && giorni(t, d) <= 30; });
   // agenda: appuntamenti e scadenze dei presenti
   const agenda = [];
-  for (const o of presenti) for (const a of avvisi(o.cod)) if (a.d && (a.k === "app" ? giorni(a.d, t) <= GIORNI_AGENDA : true))
+  for (const o of presenti) for (const a of avvisi(o.cod)) if (a.d && !a.lontana && (a.k === "app" ? giorni(a.d, t) <= GIORNI_AGENDA : true))
     agenda.push({...a, o});
   agenda.sort((a, b) => a.d - b.d);
 
@@ -458,10 +547,12 @@ function vistaElenco() {
       $("div", {class: "stat"}, $("b", {}, agenda.length), $("span", {}, "scadenze e appuntamenti"))),
     S.cerca || !agenda.length ? null : $("section", {class: "section"},
       $("h2", {class: "label"}, "Da tenere d'occhio"),
-      $("ul", {class: "agenda"}, agenda.slice(0, 12).map(a => $("li", {}, $("button", {type: "button", onclick: () => apriScheda(a.o.cod)},
+      $("div", {class: "legenda"}, $("span", {class: "b-giur"}, "Giuridico"), $("span", {class: "b-san"}, "Sanitario"), $("span", {class: "b-bad"}, "Scaduto")),
+      $("ul", {class: "agenda"}, agenda.slice(0, 15).map(a => $("li", {class: `cat-${a.cat}` + (a.scaduta ? " scaduta" : "")}, $("button", {type: "button", onclick: () => apriScheda(a.o.cod)},
         $("span", {class: "when"}, breve(a.d)),
-        $("span", {class: "what"}, a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
+        $("span", {class: "what"}, $("span", {class: "tipo"}, NOMI_CAT[a.cat]), " ", a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
         $("span", {class: "who"}, `${nomeCompleto(a.o.r)} · ${a.o.cod}`)))))),
+    S.cerca ? null : sezioneCalendario(),
     $("section", {class: "section"}, S.cerca ? null : $("h2", {class: "label"}, S.filtro === "presenti" ? "In struttura" : "Tutti gli ospiti"), lista),
     $("p", {class: "note"}, `${S.file.nome} · ${etichettaFile(S.file)}` + (S.dati.protetto ? "" : " · file senza password, non salvato sul telefono"))
   );
@@ -617,9 +708,12 @@ function stampaPresenti() {
   y = doc.lastAutoTable.finalY + 8;
   if (agenda.length) {
     y = titoloPdf(doc, y, "Scadenze e appuntamenti");
-    doc.autoTable({...stileTab(y), head: [["Data", "Cosa", "Ospite", "Codice"]],
-      body: agenda.map(a => [fmtData(a.d), a.t.replace(/: \d\d\/\d\d\/\d{4}$/, ""), nomeCompleto(a.o.r), a.o.cod]),
-      columnStyles: {0: {cellWidth: 22}, 3: {cellWidth: 29}}});
+    doc.autoTable({...stileTab(y), head: [["Data", "Tipo", "Cosa", "Ospite", "Codice"]],
+      body: agenda.map(a => [fmtData(a.d), (a.scaduta ? "Scaduto · " : "") + (NOMI_CAT[a.cat] || ""), a.t.replace(/: \d\d\/\d\d\/\d{4}$/, ""), nomeCompleto(a.o.r), a.o.cod]),
+      columnStyles: {0: {cellWidth: 22}, 1: {cellWidth: 27}, 4: {cellWidth: 29}},
+      didParseCell: c => { if (c.section === "body" && c.column.index === 1) {
+        const v = String(c.cell.raw); c.cell.styles.fontStyle = "bold";
+        c.cell.styles.textColor = v.startsWith("Scaduto") ? [154, 42, 42] : v === "Sanitario" ? [122, 62, 142] : [32, 71, 122]; } }});
   }
   piediPdf(doc);
   consegnaPdf(doc, `Ospiti presenti ${fmtData(t).replace(/\//g, "-")}`);

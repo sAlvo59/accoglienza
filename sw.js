@@ -1,7 +1,7 @@
 // Tiene in memoria l'app sul telefono, così parte anche senza rete.
 // Con la connessione scarica sempre la pagina più recente; senza, usa la copia salvata.
 // Quando cambi un file dell'app, aumenta il numero di versione qui sotto.
-const VERSIONE = "accoglienza-v6";
+const VERSIONE = "accoglienza-v7";
 const FILE = ["./", "index.html", "manifest.webmanifest", "logo.png",
   "icona-180.png", "icona-192.png", "icona-512.png",
   "xlsx.full.min.js", "aes.js", "sha512.min.js",
