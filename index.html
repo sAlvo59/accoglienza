@@ -20,7 +20,7 @@
   --bg:#EDF1F0; --surface:#FFFFFF; --fg:#14201E; --muted:#56635F; --line:#D5DDDA;
   --accent:#0E5755; --accent-soft:#D4E6E4; --on-accent:#FFFFFF;
   --ok:#25643A; --ok-soft:#DBEEDF; --warn:#7A5200; --warn-soft:#F6E7C4;
-  --bad:#9A2A2A; --bad-soft:#F5DADA; --info:#20477A; --info-soft:#DCE6F4; --san:#7A3E8E; --san-soft:#F0E1F3;
+  --bad:#9A2A2A; --bad-soft:#F5DADA; --info:#20477A; --info-soft:#DCE6F4; --san:#7A3E8E; --san-soft:#F0E1F3; --s1:#0E5755; --s2:#1D4384;
   --f-body:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
   --f-code:ui-monospace,"SF Mono",Menlo,monospace;
   --s-0:15px; --s-1:18px; --s-2:20px; --s-3:24px; --s-4:32px;
@@ -29,12 +29,12 @@
   --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
   --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
   --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
-  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; color-scheme:dark}}
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; --s1:#6FC2BD; --s2:#8FB1F0; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
   --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
   --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
-  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; color-scheme:dark}
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; --s1:#6FC2BD; --s2:#8FB1F0; color-scheme:dark}
 
 *{box-sizing:border-box}
 html,body{min-height:100%;margin:0}
@@ -75,6 +75,33 @@ button{cursor:pointer}
 .logo.small{padding:6px 8px;border-radius:10px;margin-block:4px 14px}
 .avviso{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:12px 14px;margin-block:4px 14px;font-size:var(--s-0);line-height:1.45}
 .avviso b{display:block;font-size:var(--s-1);margin-bottom:4px}
+.occbtn{appearance:none;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:grid;gap:8px;margin-bottom:18px}
+.occbtn .riga{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.occbtn b{font-size:var(--s-2)}
+.occbtn .vai{color:var(--accent);font-weight:700;font-size:var(--s-0)}
+.barra{height:10px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.barra i{display:block;height:100%}
+.sez{display:grid;gap:10px;margin-bottom:22px}
+.sez h2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sez h2 small{font-size:var(--s-0);color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+.griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.stanza{appearance:none;text-align:left;border:1px solid var(--line);border-left:6px solid var(--s1);background:var(--surface);border-radius:12px;padding:10px 12px;display:grid;gap:6px;min-width:0}
+.stanza.sez2{border-left-color:var(--s2)}
+.stanza .n{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-weight:700}
+.stanza .n span{font-size:var(--s-0);font-weight:700;padding:2px 8px;border-radius:99px}
+.st-libera{background:var(--ok-soft);color:var(--ok)} .st-parziale{background:var(--warn-soft);color:var(--warn)}
+.st-piena{background:var(--line);color:var(--muted)} .st-oltre{background:var(--bad-soft);color:var(--bad)}
+.posti{display:flex;gap:5px}
+.posti i{width:16px;height:16px;border-radius:4px;border:2px solid var(--s1)}
+.sez2 .posti i{border-color:var(--s2)}
+.posti i.occ{background:var(--s1)} .sez2 .posti i.occ{background:var(--s2)}
+.posti i.extra{background:var(--bad);border-color:var(--bad)}
+.stanza .chi{font-size:var(--s-0);color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
+.stanza[aria-expanded="true"]{outline:2px solid var(--accent)}
+.dettaglio{grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.dettaglio button{appearance:none;border:0;background:none;width:100%;text-align:left;padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.dettaglio button:last-child{border-bottom:0}
+.dettaglio .code{color:var(--muted)}
 /* testata elenco */
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 10px;display:grid;gap:10px}
 .toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -501,6 +528,99 @@ async function sblocca(password) {
 
 function blocca() { const st = document.getElementById("stampa"); if (st) st.replaceChildren(); S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
 
+/* ---------------- occupazione ---------------- */
+const STANZE = {1:4, 2:3, 3:3, 4:3, 5:2, 6:2, 7:2, 8:1, 9:1, 10:2, 11:2, 12:2, 13:2, 14:2,
+  15:2, 16:2, 17:2, 18:3, 19:2, 20:2, 21:2};
+const SEZIONE = n => n >= 15 ? 2 : 1;
+const POSTI_TOT = Object.values(STANZE).reduce((a, b) => a + b, 0);
+function leggiStanza(v) {
+  const t = String(testo(v) || "").trim();
+  if (!t) return null;
+  const m = t.match(/stanza\s*n?[°º.]?\s*(\d+)/i) || t.match(/^\s*(\d+)/);
+  return m ? +m[1] : NaN;
+}
+function occupazione() {
+  const per = {}, problemi = [];
+  for (const n of Object.keys(STANZE)) per[n] = [];
+  for (const o of S.dati.ospiti.filter(x => !uscito(x.r))) {
+    const v = campo(o.r, "Assegnazione stanza/letto", "stanza");
+    const n = leggiStanza(v);
+    if (n === null) problemi.push({o, perche: "stanza non indicata"});
+    else if (!STANZE[n]) problemi.push({o, perche: `stanza «${testo(v)}» non riconosciuta`});
+    else per[n].push(o);
+  }
+  const occ = Object.values(per).reduce((a, l) => a + Math.min(l.length, 99), 0);
+  return {per, problemi, occ, liberi: Object.entries(per).reduce((a, [n, l]) => a + Math.max(0, STANZE[n] - l.length), 0)};
+}
+function statoStanza(n, k) { const c = STANZE[n]; return k === 0 ? ["st-libera", "libera"] : k < c ? ["st-parziale", `${c - k} ${c - k === 1 ? "libero" : "liberi"}`] : k === c ? ["st-piena", "piena"] : ["st-oltre", `+${k - c} oltre`]; }
+
+function riquadroOccupazione() {
+  const {occ, liberi} = occupazione();
+  const pct = Math.round(occ / POSTI_TOT * 100);
+  return $("button", {class: "occbtn", type: "button", onclick: () => { S.vista = "occ"; vistaOccupazione(); window.scrollTo(0, 0); }},
+    $("span", {class: "riga"}, $("b", {}, `${occ} su ${POSTI_TOT} posti occupati`), $("span", {class: "vai"}, "Stanze ›")),
+    $("span", {class: "barra"}, $("i", {style: `width:${pct}%;background:var(--accent)`})),
+    $("span", {class: "riga note"}, `${liberi} ${liberi === 1 ? "posto libero" : "posti liberi"}`, `${pct}% di riempimento`));
+}
+
+function vistaOccupazione() {
+  const {per, problemi, occ, liberi} = occupazione();
+  const aperta = S.stanzaAperta;
+  const sezione = (num, nome) => {
+    const stanze = Object.keys(STANZE).map(Number).filter(n => SEZIONE(n) === num);
+    const posti = stanze.reduce((a, n) => a + STANZE[n], 0), occS = stanze.reduce((a, n) => a + per[n].length, 0);
+    const celle = [];
+    for (const n of stanze) {
+      const l = per[n], c = STANZE[n], [cls, txt] = statoStanza(n, l.length);
+      celle.push($("button", {class: "stanza" + (num === 2 ? " sez2" : ""), type: "button", "aria-expanded": String(aperta === n),
+          onclick: () => { S.stanzaAperta = aperta === n ? null : n; vistaOccupazione(); }},
+        $("span", {class: "n"}, `Stanza ${n}`, $("span", {class: cls}, txt)),
+        $("span", {class: "posti"}, Array.from({length: Math.max(c, l.length)}, (_, i) => $("i", {class: i >= c ? "extra" : i < l.length ? "occ" : null}))),
+        $("span", {class: "chi"}, l.length ? l.map(o => String(testo(campo(o.r, "Cognome"))).toUpperCase()).join(", ") : `${c} ${c === 1 ? "posto" : "posti"}`)));
+      if (aperta === n && l.length) celle.push($("div", {class: "dettaglio"}, l.map(o =>
+        $("button", {type: "button", onclick: () => { S.vista = null; apriScheda(o.cod); }}, $("span", {}, nomeCompleto(o.r)), $("span", {class: "code"}, o.cod)))));
+    }
+    return $("section", {class: "sez"},
+      $("h2", {class: "label"}, nome, $("small", {}, `${occS} su ${posti} · ${Math.max(0, posti - occS)} liberi`)),
+      $("div", {class: "griglia"}, celle));
+  };
+  mostra(
+    $("header", {class: "top"}, $("div", {class: "toprow"},
+      $("button", {class: "back", type: "button", onclick: () => { S.vista = null; vistaElenco(); }}, "‹ Ospiti"),
+      $("div", {class: "btns"},
+        $("button", {class: "iconbtn", type: "button", onclick: stampaOccupazione}, "Stampa"),
+        $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca")))),
+    $("div", {class: "head"}, $("h2", {}, "Occupazione stanze"),
+      $("p", {class: "muted", style: "margin:0"}, `${occ} presenti su ${POSTI_TOT} posti · ${liberi} liberi · ${Math.round(occ / POSTI_TOT * 100)}%`),
+      $("div", {class: "legenda"}, $("span", {class: "st-libera"}, "Libera"), $("span", {class: "st-parziale"}, "Posti liberi"), $("span", {class: "st-piena"}, "Piena"), $("span", {class: "st-oltre"}, "Oltre i posti"))),
+    problemi.length ? $("div", {class: "avviso", role: "alert"}, $("b", {}, `${problemi.length} ${problemi.length === 1 ? "presente senza stanza valida" : "presenti senza stanza valida"}`),
+      problemi.map(p => $("div", {}, `${nomeCompleto(p.o.r)} · ${p.o.cod}: ${p.perche}`)),
+      $("div", {style: "margin-top:6px"}, "Nella colonna Assegnazione stanza/letto scrivi per esempio Stanza 4 - 2.")) : null,
+    sezione(1, "Sezione 1 · stanze 1–14"),
+    sezione(2, "Sezione 2 · stanze 15–21"),
+    $("p", {class: "note"}, "Tocca una stanza per vedere chi la occupa. Tocca un nome per aprire la scheda."));
+}
+
+function stampaOccupazione() {
+  const {per, problemi, occ, liberi} = occupazione(), t = oggi();
+  const doc = nuovoPdf();
+  let y = testataPdf(doc, "Occupazione stanze", `al ${fmtData(t)} · ${occ} su ${POSTI_TOT} posti · ${liberi} liberi`);
+  for (const num of [1, 2]) {
+    const stanze = Object.keys(STANZE).map(Number).filter(n => SEZIONE(n) === num);
+    y = titoloPdf(doc, y, num === 1 ? "Sezione 1 · stanze 1-14" : "Sezione 2 · stanze 15-21");
+    doc.autoTable({...stileTab(y), head: [["Stanza", "Posti", "Occupati", "Stato", "Ospiti"]],
+      body: stanze.map(n => [n, STANZE[n], per[n].length, statoStanza(n, per[n].length)[1], per[n].map(o => `${nomeCompleto(o.r)} (${o.cod})`).join("\n")]),
+      columnStyles: {0: {cellWidth: 18}, 1: {cellWidth: 16, halign: "center"}, 2: {cellWidth: 20, halign: "center"}, 3: {cellWidth: 24}}});
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  if (problemi.length) {
+    y = titoloPdf(doc, y, "Presenti senza stanza valida");
+    doc.autoTable({...stileTab(y), body: problemi.map(p => [nomeCompleto(p.o.r), p.o.cod, p.perche])});
+  }
+  piediPdf(doc);
+  consegnaPdf(doc, `Occupazione stanze ${fmtData(t).replace(/\//g, "-")}`);
+}
+
 function sezioneCalendario() {
   const fatti = esportati();
   const conta = cat => { const ev = eventiCalendario(cat); return {tot: ev.length, nuove: ev.filter(e => !fatti.has(e.uid)).length}; };
@@ -564,6 +684,7 @@ function vistaElenco() {
       $("div", {class: "stat"}, $("b", {}, presenti.length), $("span", {}, "presenti")),
       $("div", {class: "stat"}, $("b", {}, usciti30.length), $("span", {}, "usciti negli ultimi 30 giorni")),
       $("div", {class: "stat"}, $("b", {}, agenda.length), $("span", {}, "scadenze e appuntamenti"))),
+    S.cerca ? null : riquadroOccupazione(),
     S.cerca || !agenda.length ? null : $("section", {class: "section"},
       $("h2", {class: "label"}, "Da tenere d'occhio"),
       $("div", {class: "legenda"}, $("span", {class: "b-giur"}, "Giuridico"), $("span", {class: "b-san"}, "Sanitario"), $("span", {class: "b-bad"}, "Scaduto")),
