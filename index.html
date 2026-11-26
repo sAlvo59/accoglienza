@@ -257,6 +257,8 @@ class PasswordErrata extends Error {}
 function eCifrato(u8) { return !(u8[0] === 0x50 && u8[1] === 0x4B); }
 
 function decifra(u8, password) {
+  if (!(u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0))
+    throw new Error("Questo non è un file Excel. Se in Drive l'hai aperto con Fogli Google, è diventato un altro tipo di file: scegli l'originale DataBase_Accoglienza.xlsx.");
   const cfb = XLSX.CFB.read(u8, {type: "array"});
   const info = XLSX.CFB.find(cfb, "EncryptionInfo"), pkg = XLSX.CFB.find(cfb, "EncryptedPackage");
   if (!info || !pkg) throw new Error("Il file non sembra un Excel protetto da password.");
@@ -448,7 +450,7 @@ function mostra(...nodi) { app.replaceChildren(...nodi.flat(Infinity).filter(n =
 
 async function vistaBlocco() {
   if (!S.file) S.file = await leggiFile();
-  const inp = $("input", {type: "file", id: "file", class: "hide-input", accept: ".xlsx,.xlsm,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  const inp = $("input", {type: "file", id: "file", class: "hide-input", 
     onchange: async e => { const f = e.target.files[0]; if (!f) return;
       S.file = {nome: f.name, quando: Date.now(), modificato: f.lastModified || null, buf: new Uint8Array(await f.arrayBuffer())}; S.err = ""; vistaBlocco(); }});
   const scegli = $("button", {class: "btn ghost", type: "button", onclick: () => inp.click()}, S.file ? "Scegli un altro file" : "Scegli il file Excel");
