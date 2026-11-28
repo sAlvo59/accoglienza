@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Accoglienza Tascabile</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="L'APE">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF1F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1716" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex,nofollow">
+<link rel="apple-touch-icon" href="icona-180.png">
+<link rel="icon" href="icona-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+/* Layout: una colonna da telefono. Blocco, elenco con riepilogo, scheda a schermo intero. */
+:root{
+  --bg:#EDF1F0; --surface:#FFFFFF; --fg:#14201E; --muted:#56635F; --line:#D5DDDA;
+  --accent:#0E5755; --accent-soft:#D4E6E4; --on-accent:#FFFFFF;
+  --ok:#25643A; --ok-soft:#DBEEDF; --warn:#7A5200; --warn-soft:#F6E7C4;
+  --bad:#9A2A2A; --bad-soft:#F5DADA; --info:#20477A; --info-soft:#DCE6F4; --san:#7A3E8E; --san-soft:#F0E1F3; --s1:#0E5755; --s2:#1D4384;
+  --f-body:-apple-system,"SF Pro Text","Helvetica Neue",Arial,sans-serif;
+  --f-code:ui-monospace,"SF Mono",Menlo,monospace;
+  --s-0:15px; --s-1:18px; --s-2:20px; --s-3:24px; --s-4:32px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
+  --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
+  --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; --s1:#6FC2BD; --s2:#8FB1F0; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1716; --surface:#18221F; --fg:#E6EEEC; --muted:#9AAAA6; --line:#2B3835;
+  --accent:#6FC2BD; --accent-soft:#1E3A38; --on-accent:#08201F;
+  --ok:#8FD3A2; --ok-soft:#183324; --warn:#F0C46A; --warn-soft:#3A2D10;
+  --bad:#F19C9C; --bad-soft:#3B1C1C; --info:#9DBDF0; --info-soft:#1A2840; --san:#DDA8EA; --san-soft:#35213C; --s1:#6FC2BD; --s2:#8FB1F0; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{min-height:100%;margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:var(--s-1);line-height:1.45;
+  -webkit-text-size-adjust:100%;}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.code{font-family:var(--f-code);font-size:.92em;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.label{font-size:var(--s-0);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+
+/* blocco */
+.lock{display:grid;gap:20px;padding-top:9vh}
+.lock h1{font-size:var(--s-4)}
+.lock p{margin:0}
+.field{display:grid;gap:8px}
+.input{width:100%;padding:14px 16px;border:2px solid var(--line);border-radius:12px;background:var(--surface);font-size:var(--s-2)}
+.input:focus{border-color:var(--accent);outline:none}
+.btn{appearance:none;border:0;border-radius:12px;padding:15px 18px;font-weight:700;font-size:var(--s-1);
+  background:var(--accent);color:var(--on-accent);width:100%}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn:disabled{opacity:.55}
+.filebox{display:flex;gap:12px;align-items:center;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.filebox > div{min-width:0}
+.filebox b{display:block;overflow-wrap:anywhere}
+.err{color:var(--bad);font-weight:700;margin:0}
+.note{font-size:var(--s-0);color:var(--muted)}
+.hide-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+.logo{display:block;background:#FFFFFF;border-radius:14px;padding:10px 12px;border:1px solid var(--line)}
+.logo img{display:block;width:100%;height:auto;max-height:var(--logo-max,none);object-fit:contain}
+.logo.small{padding:6px 8px;border-radius:10px;margin-block:4px 14px}
+.avviso{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:12px 14px;margin-block:4px 14px;font-size:var(--s-0);line-height:1.45}
+.avviso b{display:block;font-size:var(--s-1);margin-bottom:4px}
+.occbtn{appearance:none;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:grid;gap:8px;margin-bottom:18px}
+.occbtn .riga{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.occbtn b{font-size:var(--s-2)}
+.occbtn .vai{color:var(--accent);font-weight:700;font-size:var(--s-0)}
+.barra{height:10px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.barra i{display:block;height:100%}
+.sez{display:grid;gap:10px;margin-bottom:22px}
+.sez h2{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sez h2 small{font-size:var(--s-0);color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400}
+.griglia{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.stanza{appearance:none;text-align:left;border:1px solid var(--line);border-left:6px solid var(--s1);background:var(--surface);border-radius:12px;padding:10px 12px;display:grid;gap:6px;min-width:0}
+.stanza.sez2{border-left-color:var(--s2)}
+.stanza .n{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-weight:700}
+.stanza .n span{font-size:var(--s-0);font-weight:700;padding:2px 8px;border-radius:99px}
+.st-libera{background:var(--ok-soft);color:var(--ok)} .st-parziale{background:var(--warn-soft);color:var(--warn)}
+.st-piena{background:var(--line);color:var(--muted)} .st-oltre{background:var(--bad-soft);color:var(--bad)}
+.posti{display:flex;gap:5px}
+.posti i{width:16px;height:16px;border-radius:4px;border:2px solid var(--s1)}
+.sez2 .posti i{border-color:var(--s2)}
+.posti i.occ{background:var(--s1)} .sez2 .posti i.occ{background:var(--s2)}
+.posti i.extra{background:var(--bad);border-color:var(--bad)}
+.stanza .chi{font-size:var(--s-0);color:var(--muted);line-height:1.35;overflow-wrap:anywhere}
+.stanza[aria-expanded="true"]{outline:2px solid var(--accent)}
+.dettaglio{grid-column:1/-1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.dettaglio button{appearance:none;border:0;background:none;width:100%;text-align:left;padding:8px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px}
+.dettaglio button:last-child{border-bottom:0}
+.dettaglio .code{color:var(--muted)}
+/* testata elenco */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px 10px;display:grid;gap:10px}
+.toprow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.toprow h1{font-size:var(--s-3)}
+.iconbtn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:var(--s-0);font-weight:700;color:var(--accent);white-space:nowrap}
+.search{font-size:var(--s-2)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:var(--s-0);font-weight:700;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-block:6px 18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stat b{display:block;font-size:var(--s-4);line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:var(--s-0);color:var(--muted)}
+
+.section{display:grid;gap:10px;margin-bottom:22px}
+.agenda{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.agenda li + li{border-top:1px solid var(--line)}
+.agenda button{appearance:none;border:0;background:none;width:100%;text-align:left;padding:12px 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:baseline}
+.agenda .when{font-weight:700;font-variant-numeric:tabular-nums;min-width:5.2em}
+.agenda .what{min-width:0}
+.agenda .who{grid-column:2;color:var(--muted);font-size:var(--s-0)}
+
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.row{appearance:none;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.row .name{font-weight:700;font-size:var(--s-2);min-width:0;overflow-wrap:anywhere}
+.row .meta{grid-column:1;color:var(--muted);font-size:var(--s-0)}
+.row .dot{grid-row:1 / span 2;grid-column:2;font-size:var(--s-0);font-weight:700;padding:4px 10px;border-radius:999px}
+.row.out{opacity:.72}
+.dot.in{background:var(--ok-soft);color:var(--ok)}
+.dot.out{background:var(--line);color:var(--muted)}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+
+/* scheda */
+.back{appearance:none;border:0;background:none;color:var(--accent);font-weight:700;font-size:var(--s-1);padding:6px 0}
+.head{display:grid;gap:8px;margin-block:6px 16px}
+.head h2{font-size:var(--s-4)}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.badge{font-size:var(--s-0);font-weight:700;padding:6px 11px;border-radius:8px;line-height:1.25}
+.b-ok{background:var(--ok-soft);color:var(--ok)} .b-bad{background:var(--bad-soft);color:var(--bad)}
+.b-warn{background:var(--warn-soft);color:var(--warn)} .b-info{background:var(--info-soft);color:var(--info)}
+.b-giur{background:var(--info-soft);color:var(--info)} .b-san{background:var(--san-soft);color:var(--san)}
+.agenda li{border-left:5px solid transparent}
+.agenda li.cat-giur{border-left-color:var(--info)} .agenda li.cat-san{border-left-color:var(--san)}
+.agenda .tipo{font-size:var(--s-0);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.cat-giur .tipo{color:var(--info)} .cat-san .tipo{color:var(--san)}
+.agenda li.scaduta .when{color:var(--bad)}
+.legenda{display:flex;gap:8px;flex-wrap:wrap}
+.legenda span{font-size:var(--s-0);font-weight:700;padding:4px 10px;border-radius:999px}
+.cal{display:grid;gap:10px}
+.cal .btn.giur{background:var(--info);color:var(--surface)} .cal .btn.san{background:var(--san);color:var(--surface)}
+.cal .btn small{display:block;font-weight:400;font-size:var(--s-0);opacity:.9}
+.msgcal{display:grid;gap:10px;background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:12px 14px;font-size:var(--s-0)}
+.msgcal .btn{text-decoration:none;text-align:center;display:block}
+.linkbtn{appearance:none;border:0;background:none;color:var(--accent);font-weight:700;font-size:var(--s-0);padding:4px 0;justify-self:start;text-decoration:underline}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.card > summary{list-style:none;padding:14px 16px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-weight:700;font-size:var(--s-2);cursor:pointer}
+.card > summary::-webkit-details-marker{display:none}
+.card > summary::after{content:"+";color:var(--accent);font-size:var(--s-3);line-height:1}
+.card[open] > summary::after{content:"–"}
+.card > summary small{font-weight:400;color:var(--muted);font-size:var(--s-0);margin-left:auto}
+.kv{margin:0;padding:0 16px 10px;display:grid}
+.kv div{display:grid;gap:2px;padding-block:9px;border-top:1px solid var(--line)}
+.kv dt{font-size:var(--s-0);color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+.kv dd.none{color:var(--line)}
+.entry{padding:12px 16px;border-top:1px solid var(--line);display:grid;gap:4px}
+.entry .when{font-weight:700}
+.nodata{padding:0 16px 16px;color:var(--muted);margin:0}
+.busy{display:flex;gap:10px;align-items:center;color:var(--muted)}
+.spin{width:20px;height:20px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}
+.btns{display:flex;gap:8px}
+#stampa{display:none}
+@media print{
+  @page{size:A4;margin:14mm 12mm 16mm}
+  :root{padding:0!important;color-scheme:light}
+  html,body{background:#FFFFFF!important;color:#111111!important}
+  body::before,#app{display:none!important}
+  #stampa{display:block;font:10.5pt/1.35 -apple-system,"Helvetica Neue",Helvetica,Arial,sans-serif;color:#111111}
+  .p-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12mm;border-bottom:1.5pt solid #0E5755;padding-bottom:3mm;margin-bottom:4mm}
+  .p-head img{width:62mm;height:auto}
+  .p-head .p-id{text-align:right}
+  .p-head h1{font-size:17pt;margin:0;line-height:1.1}
+  .p-head p{margin:1mm 0 0;color:#444444}
+  .p-stato{margin:0 0 4mm;padding:2mm 3mm;background:#F1F4F3;border-left:2pt solid #0E5755}
+  .p-stato p{margin:.6mm 0}
+  #stampa h2{font-size:11.5pt;color:#0E5755;margin:5mm 0 1.5mm;break-after:avoid;border-bottom:.6pt solid #BBC6C3;padding-bottom:1mm}
+  #stampa table{width:100%;border-collapse:collapse}
+  #stampa th,#stampa td{text-align:left;vertical-align:top;padding:1.3mm 2mm;border-bottom:.4pt solid #D2D9D7}
+  #stampa tr{break-inside:avoid}
+  .p-kv th{width:38%;font-weight:normal;color:#555555}
+  .p-kv td{min-height:5mm}
+  .p-tab th{background:#E7EEEC;font-weight:bold;font-size:9.5pt}
+  .p-tab td{font-size:9.5pt}
+  .p-num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .p-vuoto{color:#777777;margin:1mm 0}
+  .p-piede{margin-top:7mm;padding-top:2mm;border-top:.6pt solid #BBC6C3;font-size:8.5pt;color:#555555}
+}
+.logo{--logo-max:150px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div id="stampa" aria-hidden="true"></div>
+
+<script src="config.js"></script>
+<script src="xlsx.full.min.js"></script>
+<script src="aes.js"></script>
+<script src="sha512.min.js"></script>
+<script src="jspdf.umd.min.js"></script>
+<script src="jspdf.autotable.min.js"></script>
+<script>
+"use strict";
+/* ---------------- impostazioni ---------------- */
+const FOGLIO_PRINCIPALE = "ANAGRAFICA";
+const FOGLI_ESCLUSI = ["LISTE"];
+const TITOLI = {"ANAGRAFICA":"Anagrafica","PERCORSO MIGRATORIO":"Percorso migratorio","STATO GIURIDICO":"Stato giuridico",
+  "SALUTE BISOGNI":"Salute e bisogni","INTEGRAZIONE":"Integrazione","REGISTRO INTERVENTI":"Registro interventi"};
+const GIORNI_SCADENZA = 90, GIORNI_AGENDA = 30, BLOCCO_MINUTI = 3;
+
+/* ---------------- utilità ---------------- */
+const $ = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return el;
+};
+const norm = s => String(s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+const oggi = () => { const d = new Date(); d.setHours(0,0,0,0); return d; };
+const giorni = (a, b) => Math.round((a - b) / 86400000);
+const fmtData = d => d ? `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}` : "";
+const breve = d => d.toLocaleDateString("it-IT", {day:"numeric", month:"short"});
+const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+/* ---------------- archivio cifrato sul telefono (IndexedDB) ---------------- */
+function idb() {
+  return new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open(CONFIG.id, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("file");
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  });
+}
+async function salvaFile(rec) {
+  try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction("file","readwrite");
+    t.objectStore("file").put(rec, "db"); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; }
+  catch { return false; }
+}
+async function leggiFile() {
+  try { const db = await idb(); return await new Promise((res) => { const q = db.transaction("file").objectStore("file").get("db");
+    q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); }
+  catch { return null; }
+}
+async function cancellaFile() {
+  try { const db = await idb(); await new Promise(res => { const t = db.transaction("file","readwrite");
+    t.objectStore("file").delete("db"); t.oncomplete = res; t.onerror = res; }); } catch {}
+}
+
+/* ---------------- decifratura Excel (ECMA-376 Agile) ---------------- */
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const cat = (...a) => { const o = new Uint8Array(a.reduce((n, x) => n + x.length, 0)); let i = 0; for (const x of a) { o.set(x, i); i += x.length; } return o; };
+const u32 = n => new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]);
+const H = u8 => new Uint8Array(sha512.arrayBuffer(u8));
+const uguali = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+function aesDec(key, iv, data) {
+  const n = data.length - (data.length % 16);
+  return new aesjs.ModeOfOperation.cbc(key, iv).decrypt(data.subarray(0, n));
+}
+function fitKey(h, len) { if (h.length >= len) return h.slice(0, len); const o = new Uint8Array(len).fill(0x36); o.set(h); return o; }
+
+class PasswordErrata extends Error {}
+
+function eCifrato(u8) { return !(u8[0] === 0x50 && u8[1] === 0x4B); }
+
+function decifra(u8, password) {
+  if (!(u8[0] === 0xD0 && u8[1] === 0xCF && u8[2] === 0x11 && u8[3] === 0xE0))
+    throw new Error("Questo non è un file Excel. Se in Drive l'hai aperto con Fogli Google, è diventato un altro tipo di file: scegli l'originale DataBase_Accoglienza.xlsx.");
+  const cfb = XLSX.CFB.read(u8, {type: "array"});
+  const info = XLSX.CFB.find(cfb, "EncryptionInfo"), pkg = XLSX.CFB.find(cfb, "EncryptedPackage");
+  if (!info || !pkg) throw new Error("Il file non sembra un Excel protetto da password.");
+  const inf = new Uint8Array(info.content), pk = new Uint8Array(pkg.content);
+  if (!(inf[0] === 4 && inf[2] === 4)) throw new Error("Questo tipo di protezione non è supportato. Salva il file con Excel recente.");
+  const xml = new DOMParser().parseFromString(new TextDecoder().decode(inf.subarray(8)), "application/xml");
+  const kd = xml.getElementsByTagNameNS("*", "keyData")[0], ek = xml.getElementsByTagNameNS("*", "encryptedKey")[0];
+  if ((ek.getAttribute("hashAlgorithm") || "") !== "SHA512" || kd.getAttribute("hashAlgorithm") !== "SHA512")
+    throw new Error("Algoritmo di protezione non supportato.");
+  const keyBytes = +ek.getAttribute("keyBits") / 8, salt = b64(ek.getAttribute("saltValue"));
+  const spin = +ek.getAttribute("spinCount");
+  const pw = new Uint8Array(password.length * 2);
+  for (let i = 0; i < password.length; i++) { const c = password.charCodeAt(i); pw[2*i] = c & 255; pw[2*i+1] = c >> 8; }
+  let h = H(cat(salt, pw));
+  const buf = new Uint8Array(4 + 64);
+  for (let i = 0; i < spin; i++) { buf.set(u32(i), 0); buf.set(h, 4); h = H(buf); }
+  const derive = blk => fitKey(H(cat(h, new Uint8Array(blk))), keyBytes);
+  // verifica password
+  const vIn = aesDec(derive([0xfe,0xa7,0xd2,0x76,0x3b,0x4b,0x9e,0x79]), salt, b64(ek.getAttribute("encryptedVerifierHashInput"))).subarray(0, salt.length);
+  const vHash = aesDec(derive([0xd7,0xaa,0x0f,0x6d,0x30,0x61,0x34,0x4e]), salt, b64(ek.getAttribute("encryptedVerifierHashValue"))).subarray(0, 64);
+  if (!uguali(H(vIn), vHash)) throw new PasswordErrata();
+  const secret = aesDec(derive([0x14,0x6e,0x0b,0xe7,0xab,0xac,0xd0,0xd6]), salt, b64(ek.getAttribute("encryptedKeyValue"))).subarray(0, keyBytes);
+  // pacchetto, a blocchi da 4096 byte
+  const size = pk[0] | (pk[1] << 8) | (pk[2] << 16) | (pk[3] << 24);
+  const kdSalt = b64(kd.getAttribute("saltValue")), blockSize = +kd.getAttribute("blockSize");
+  const out = new Uint8Array(pk.length);
+  let o = 0;
+  for (let i = 0, off = 8; off < pk.length; i++, off += 4096) {
+    const iv = H(cat(kdSalt, u32(i))).subarray(0, blockSize);
+    const dec = aesDec(secret, iv, pk.subarray(off, Math.min(off + 4096, pk.length)));
+    out.set(dec, o); o += dec.length;
+  }
+  return out.subarray(0, size >>> 0);
+}
+
+/* ---------------- lettura fogli ---------------- */
+function valore(c) {
+  if (!c) return null;
+  if (c.t === "n" && c.z && XLSX.SSF.is_date(c.z)) {
+    const p = XLSX.SSF.parse_date_code(c.v); return new Date(p.y, p.m - 1, p.d);
+  }
+  if (c.t === "d") return new Date(c.v.getFullYear(), c.v.getMonth(), c.v.getDate());
+  if (c.t === "n") return Number.isInteger(c.v) ? String(c.v) : (c.w || String(c.v));
+  if (c.t === "b") return c.v ? "Sì" : "No";
+  const s = String(c.v ?? "").trim(); return s || null;
+}
+const testo = v => v instanceof Date ? fmtData(v) : (v ?? "");
+
+function costruisci(u8) {
+  const wb = XLSX.read(u8, {type: "array", cellNF: true, cellDates: false});
+  const meta = (wb.Workbook && wb.Workbook.Sheets) || [];
+  const fogli = [];
+  let anag = null;
+  wb.SheetNames.forEach((nome, i) => {
+    if (FOGLI_ESCLUSI.includes(nome.toUpperCase()) || (meta[i] && meta[i].Hidden)) return;
+    const ws = wb.Sheets[nome]; if (!ws || !ws["!ref"]) return;
+    const R = XLSX.utils.decode_range(ws["!ref"]);
+    const intest = [];
+    for (let c = R.s.c; c <= R.e.c; c++) intest.push(testo(valore(ws[XLSX.utils.encode_cell({r: R.s.r, c})])));
+    while (intest.length && !intest[intest.length - 1]) intest.pop();
+    const ki = intest.findIndex(h => norm(h) === "codice id");
+    if (ki < 0) return;
+    const dati = new Map();
+    for (let r = R.s.r + 1; r <= R.e.r; r++) {
+      const riga = {};
+      intest.forEach((h, j) => { if (h) riga[h] = valore(ws[XLSX.utils.encode_cell({r, c: R.s.c + j})]); });
+      const cod = String(testo(riga[intest[ki]])).toUpperCase().trim();
+      if (!cod) continue;
+      if (!dati.has(cod)) dati.set(cod, []);
+      dati.get(cod).push(riga);
+    }
+    const f = {nome, titolo: TITOLI[nome.toUpperCase()] || nome, campi: intest.filter((h, j) => h && j !== ki), dati};
+    fogli.push(f);
+    if (nome.toUpperCase() === FOGLIO_PRINCIPALE) anag = f;
+  });
+  if (!anag) throw new Error(`Nel file manca il foglio ${FOGLIO_PRINCIPALE} con la colonna Codice ID.`);
+  const ospiti = [...anag.dati.entries()].map(([cod, righe]) => ({cod, r: righe[0]}))
+    .filter(o => campo(o.r, "Cognome") || campo(o.r, "Nome"))
+    .sort((a, b) => a.cod.localeCompare(b.cod, "it", {numeric: true}));
+  return {fogli, ospiti};
+}
+function campo(riga, ...nomi) {
+  const ks = Object.keys(riga);
+  for (const n of nomi) { const k = ks.find(k => norm(k) === norm(n)); if (k && riga[k] != null) return riga[k]; }
+  for (const n of nomi) { const k = ks.find(k => norm(k).includes(norm(n))); if (k && riga[k] != null) return riga[k]; }
+  return null;
+}
+const nomeCompleto = r => `${String(testo(campo(r, "Cognome"))).toUpperCase()} ${testo(campo(r, "Nome"))}`.trim();
+const uscito = r => !!campo(r, "Data Uscita dalla Struttura", "Data uscita");
+
+/* Ogni data viene classificata: giuridica (blu) o sanitaria (prugna).
+   Le colonne nuove con date si riconoscono dal foglio o dalle parole nel titolo. */
+function categoria(foglio, chiave) {
+  const fn = norm(foglio), kn = norm(chiave);
+  if (fn === "registro interventi" || fn === "anagrafica") return null;
+  if (fn.includes("salute") || /visita|controllo|terapia|vaccin|esame|sanitari|medic|specialist|ricovero|stp/.test(kn)) return "san";
+  if (fn.includes("giuridic") || /scadenza|questura|commissione|permesso|ricorso|udienza|tribunale|prefettura/.test(kn)) return "giur";
+  return null;
+}
+const NOMI_CAT = {giur: "Giuridico", san: "Sanitario"};
+const etichettaCampo = k => { const x = String(k).replace(/^Data\s+/i, "").replace(/^Appuntamento\s+/i, "").trim(); return x.charAt(0).toUpperCase() + x.slice(1); };
+
+function avvisi(cod) {
+  const out = [], t = oggi();
+  for (const f of S.dati.fogli) for (const r of (f.dati.get(cod) || [])) for (const [k, v] of Object.entries(r)) {
+    const kn = norm(k);
+    if (v instanceof Date) {
+      const cat = categoria(f.nome, k);
+      if (cat) {
+        const g = giorni(v, t), scad = kn.includes("scadenza"), nome = (x => x.charAt(0).toUpperCase() + x.slice(1))(k.replace(/^Data /i, ""));
+        if (g < 0) { if (scad) out.push({t: `${nome} scaduta il ${fmtData(v)}`, c: "b-bad", d: v, k: "scad", cat, campo: k, scaduta: true}); }
+        else if (!scad || g <= GIORNI_SCADENZA) out.push({t: `${nome}: ${fmtData(v)}`, c: cat === "san" ? "b-san" : "b-giur", d: v, k: scad ? "scad" : "app", cat, campo: k});
+        else out.push({t: `${nome}: ${fmtData(v)}`, d: v, k: "scad", cat, campo: k, lontana: true});
+      }
+    }
+    if (kn === "allergie" && v && !["nessuna", "no", "-", "n/a"].includes(norm(v)))
+      out.push({t: `Allergie: ${testo(v)}`, c: "b-bad"});
+    if (kn.includes("supporto psicologico") && norm(v).startsWith("s"))
+      out.push({t: "Supporto psicologico attivo", c: "b-san"});
+  }
+  return out;
+}
+
+/* ---------------- calendario ---------------- */
+const LS_CAL = CONFIG.id + "-cal-esportati";
+const esportati = () => { try { return new Set(JSON.parse(lsGet(LS_CAL) || "[]")); } catch { return new Set(); } };
+const ymd = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+function eventiCalendario(cat) {
+  const t = oggi(), ev = [];
+  for (const o of S.dati.ospiti.filter(x => !uscito(x.r)))
+    for (const a of avvisi(o.cod))
+      if (a.cat === cat && a.d && !a.scaduta && giorni(a.d, t) >= 0)
+        ev.push({uid: `${o.cod}-${norm(a.campo).replace(/[^a-z0-9]+/g, "-")}-${ymd(a.d)}@${CONFIG.id}`, cod: o.cod, d: a.d, campo: a.campo, scad: a.k === "scad", cat});
+  return ev.sort((x, y) => x.d - y.d);
+}
+function testoIcs(s) { return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
+function piega(riga) { const out = []; while (riga.length > 60) { out.push(riga.slice(0, 60)); riga = " " + riga.slice(60); } out.push(riga); return out.join("\r\n"); }
+function creaIcs(eventi, nomeCal) {
+  const ora = new Date(), stamp = ora.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${CONFIG.nome}//Accoglienza Tascabile//IT`, "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + testoIcs(nomeCal)];
+  for (const e of eventi) {
+    const fine = new Date(e.d); fine.setDate(fine.getDate() + 1);
+    const titolo = `${etichettaCampo(e.campo)} · ${e.cod}`;
+    const allarmi = e.scad ? ["-P29DT15H", "-PT15H"] : ["-PT15H", "PT8H"];
+    L.push("BEGIN:VEVENT", "UID:" + e.uid, "DTSTAMP:" + stamp, "DTSTART;VALUE=DATE:" + ymd(e.d), "DTEND;VALUE=DATE:" + ymd(fine),
+      "SUMMARY:" + testoIcs(titolo), "DESCRIPTION:" + testoIcs(`${e.campo} per l'ospite ${e.cod}. Apri la scheda nell'app ${CONFIG.nome} per i dettagli.`),
+      "CATEGORIES:" + NOMI_CAT[e.cat], "TRANSP:TRANSPARENT");
+    for (const tr of allarmi) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + testoIcs(titolo), "TRIGGER:" + tr, "END:VALARM");
+    L.push("END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  return L.map(piega).join("\r\n") + "\r\n";
+}
+function esportaCalendario(cat, tutte) {
+  const fatti = esportati(), tuttiEv = eventiCalendario(cat);
+  const ev = tutte ? tuttiEv : tuttiEv.filter(e => !fatti.has(e.uid));
+  const agg = cat === "san" ? "sanitaria" : "giuridica";
+  if (!tuttiEv.length) { S.msgCal = {t: `Nel file non c'è nessuna scadenza ${agg} futura. Quando inserirai le date in Excel, compariranno qui.`}; return vistaElenco(); }
+  if (!ev.length) { S.msgCal = {t: `Le scadenze ${cat === "san" ? "sanitarie" : "giuridiche"} sono già tutte nel calendario. Non c'è niente di nuovo da aggiungere.`}; return vistaElenco(); }
+  const nomeCal = cat === "san" ? "CAS Sanitario" : "CAS Giuridico";
+  const nomeFile = `${nomeCal} ${fmtData(oggi()).replace(/\//g, "-")}.ics`;
+  const blob = new Blob([creaIcs(ev, nomeCal)], {type: "text/calendar"});
+  const segna = () => { ev.forEach(e => fatti.add(e.uid)); lsSet(LS_CAL, JSON.stringify([...fatti])); };
+  const conLink = () => {
+    let file = null;
+    try { file = new File([blob], nomeFile, {type: "text/calendar"}); } catch (e) {}
+    let puoCondividere = false;
+    try { puoCondividere = !!(file && navigator.canShare && navigator.canShare({files: [file]})); } catch (e) {}
+    S.msgCal = {t: `${ev.length} ${ev.length === 1 ? "scadenza pronta" : "scadenze pronte"} per il calendario ${nomeCal}. Tocca Apri nel Calendario: compare Aggiungi tutto, toccalo e scegli ${nomeCal}. Se non compare, usa Invia per email e apri l'allegato dalla mail.`,
+      link: {url: URL.createObjectURL(blob), nome: nomeFile, dopo: segna},
+      mail: puoCondividere ? () => navigator.share({files: [file], title: nomeCal}).then(segna).catch(() => {}) : null};
+    vistaElenco();
+  };
+  return conLink();
+}
+function condividiFile(blob, nomeFile, tipo, fatto) {
+  let file = null;
+  try { file = new File([blob], nomeFile, {type: tipo}); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({files: [file]})) {
+    navigator.share({files: [file], title: nomeFile}).then(() => fatto && fatto())
+      .catch(e => { if (e && e.name !== "AbortError") { apriPdf(blob, nomeFile.replace(/\.\w+$/, "")); fatto && fatto(); } });
+  } else { apriPdf(blob, nomeFile.replace(/\.\w+$/, "")); fatto && fatto(); }
+}
+
+/* ---------------- stato e viste ---------------- */
+const S = {dati: null, file: null, filtro: lsGet(CONFIG.id + "-filtro") || "presenti", cerca: "", cod: null, err: "", busy: false, nascostoDa: 0};
+const app = document.getElementById("app");
+function mostra(...nodi) { app.replaceChildren(...nodi.flat(Infinity).filter(n => n != null && n !== false)); }
+
+async function vistaBlocco() {
+  if (!S.file) S.file = await leggiFile();
+  const inp = $("input", {type: "file", id: "file", class: "hide-input", 
+    onchange: async e => { const f = e.target.files[0]; if (!f) return;
+      S.file = {nome: f.name, quando: Date.now(), modificato: f.lastModified || null, buf: new Uint8Array(await f.arrayBuffer())}; S.err = ""; vistaBlocco(); }});
+  const scegli = $("button", {class: "btn ghost", type: "button", onclick: () => inp.click()}, S.file ? "Scegli un altro file" : "Scegli il file Excel");
+  const pw = $("input", {class: "input", id: "pw", type: "password", autocomplete: "current-password", placeholder: "Password del file", enterkeyhint: "go"});
+  const apri = $("button", {class: "btn", type: "submit", disabled: S.busy || !S.file}, "Apri");
+  const form = $("form", {class: "field", onsubmit: e => { e.preventDefault(); sblocca(pw.value); }},
+    $("label", {for: "pw", class: "label"}, "Password"), pw, apri);
+  mostra($("section", {class: "lock"},
+    $("div", {class: "logo"}, $("img", {src: "logo.png", alt: CONFIG.nome})),
+    $("h1", {}, "Accoglienza Tascabile"),
+    S.file ? $("div", {class: "filebox"}, $("div", {},
+      $("b", {}, S.file.nome),
+      $("span", {class: "note"}, etichettaFile(S.file)))) :
+      $("p", {class: "muted"}, "Scegli il tuo DataBase_Accoglienza.xlsx da iCloud Drive o da File. Il file resta cifrato sul telefono e si apre solo con la password."),
+    inp, scegli,
+    S.file ? form : null,
+    S.busy ? $("div", {class: "busy"}, $("span", {class: "spin"}), "Sto aprendo il file") : null,
+    S.err ? $("p", {class: "err", role: "alert"}, S.err) : null,
+    $("p", {class: "note"}, "Niente lascia il telefono. La password non viene salvata. L'app si blocca da sola se resta in secondo piano per più di " + BLOCCO_MINUTI + " minuti.")
+  ));
+  if (S.file && !S.busy) setTimeout(() => pw.focus(), 50);
+}
+
+async function sblocca(password) {
+  if (!S.file) return;
+  S.busy = true; S.err = ""; vistaBlocco();
+  await new Promise(r => setTimeout(r, 60));
+  try {
+    const buf = S.file.buf;
+    let chiaro;
+    if (eCifrato(buf)) {
+      if (!password) throw new Error("Scrivi la password del file.");
+      chiaro = decifra(buf, password);
+      if (!(S.file.salvato)) { S.file.salvato = await salvaFile({nome: S.file.nome, quando: S.file.quando, modificato: S.file.modificato, buf}); }
+    } else {
+      chiaro = buf; // file senza password: lo leggo ma non lo salvo sul telefono
+    }
+    S.dati = costruisci(chiaro);
+    caricaRisorsePdf();
+    S.dati.protetto = eCifrato(buf);
+    S.busy = false; S.cod = null; vistaElenco();
+  } catch (e) {
+    S.busy = false;
+    S.err = e instanceof PasswordErrata ? "Password errata. Riprova." : (e.message || "Non riesco a leggere il file.");
+    vistaBlocco();
+  }
+}
+
+function blocca() { const st = document.getElementById("stampa"); if (st) st.replaceChildren(); S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
+
+/* ---------------- occupazione ---------------- */
+const STANZE = CONFIG.stanze || {};
+const SEZIONI = (CONFIG.sezioni && CONFIG.sezioni.length) ? CONFIG.sezioni : [{nome: "Stanze", da: 0, a: 9999}];
+const SEZIONE = n => SEZIONI.findIndex(z => n >= z.da && n <= z.a) + 1;
+const DISMESSE = CONFIG.dismesse || [];
+const CON_STANZE = Object.keys(STANZE).length > 0;
+const POSTI_TOT = Object.values(STANZE).reduce((a, b) => a + b, 0);
+function leggiStanza(v) {
+  const t = String(testo(v) || "").trim();
+  if (!t) return null;
+  const m = t.match(/stanza\s*n?[°º.]?\s*(\d+)/i) || t.match(/^\s*(\d+)/);
+  return m ? +m[1] : NaN;
+}
+function occupazione() {
+  const per = {}, problemi = [];
+  for (const n of Object.keys(STANZE)) per[n] = [];
+  for (const o of S.dati.ospiti.filter(x => !uscito(x.r))) {
+    const v = campo(o.r, "Assegnazione stanza/letto", "stanza");
+    const n = leggiStanza(v);
+    if (n === null) problemi.push({o, perche: "stanza non indicata"});
+    else if (DISMESSE.includes(n)) problemi.push({o, perche: `assegnato alla stanza ${n}, che non è più in uso`});
+    else if (!STANZE[n]) problemi.push({o, perche: `stanza «${testo(v)}» non riconosciuta`});
+    else per[n].push(o);
+  }
+  const occ = Object.values(per).reduce((a, l) => a + Math.min(l.length, 99), 0);
+  return {per, problemi, occ, liberi: Object.entries(per).reduce((a, [n, l]) => a + Math.max(0, STANZE[n] - l.length), 0)};
+}
+function statoStanza(n, k) { const c = STANZE[n]; return k === 0 ? ["st-libera", "libera"] : k < c ? ["st-parziale", `${c - k} ${c - k === 1 ? "libero" : "liberi"}`] : k === c ? ["st-piena", "piena"] : ["st-oltre", `+${k - c} oltre`]; }
+
+function riquadroOccupazione() {
+  const {occ, liberi} = occupazione();
+  const pct = Math.round(occ / POSTI_TOT * 100);
+  return $("button", {class: "occbtn", type: "button", onclick: () => { S.vista = "occ"; vistaOccupazione(); window.scrollTo(0, 0); }},
+    $("span", {class: "riga"}, $("b", {}, `${occ} su ${POSTI_TOT} posti occupati`), $("span", {class: "vai"}, "Stanze ›")),
+    $("span", {class: "barra"}, $("i", {style: `width:${pct}%;background:var(--accent)`})),
+    $("span", {class: "riga note"}, $("span", {}, `${liberi} ${liberi === 1 ? "posto libero" : "posti liberi"}`), $("span", {}, `${pct}% di riempimento`)));
+}
+
+function vistaOccupazione() {
+  const {per, problemi, occ, liberi} = occupazione();
+  const aperta = S.stanzaAperta;
+  const sezione = (num, nome) => {
+    const stanze = Object.keys(STANZE).map(Number).filter(n => SEZIONE(n) === num);
+    const posti = stanze.reduce((a, n) => a + STANZE[n], 0), occS = stanze.reduce((a, n) => a + per[n].length, 0);
+    const celle = [];
+    for (const n of stanze) {
+      const l = per[n], c = STANZE[n], [cls, txt] = statoStanza(n, l.length);
+      celle.push($("button", {class: "stanza" + (num === 2 ? " sez2" : ""), type: "button", "aria-expanded": String(aperta === n),
+          onclick: () => { S.stanzaAperta = aperta === n ? null : n; vistaOccupazione(); }},
+        $("span", {class: "n"}, `Stanza ${n}`, $("span", {class: cls}, txt)),
+        $("span", {class: "posti"}, Array.from({length: Math.max(c, l.length)}, (_, i) => $("i", {class: i >= c ? "extra" : i < l.length ? "occ" : null}))),
+        $("span", {class: "chi"}, l.length ? l.map(o => String(testo(campo(o.r, "Cognome"))).toUpperCase()).join(", ") : `${c} ${c === 1 ? "posto" : "posti"}`)));
+      if (aperta === n && l.length) celle.push($("div", {class: "dettaglio"}, l.map(o =>
+        $("button", {type: "button", onclick: () => { S.vista = null; apriScheda(o.cod); }}, $("span", {}, nomeCompleto(o.r)), $("span", {class: "code"}, o.cod)))));
+    }
+    return $("section", {class: "sez"},
+      $("h2", {class: "label"}, nome, $("small", {}, `${occS} su ${posti} · ${Math.max(0, posti - occS)} liberi`)),
+      $("div", {class: "griglia"}, celle));
+  };
+  mostra(
+    $("header", {class: "top"}, $("div", {class: "toprow"},
+      $("button", {class: "back", type: "button", onclick: () => { S.vista = null; vistaElenco(); }}, "‹ Ospiti"),
+      $("div", {class: "btns"},
+        $("button", {class: "iconbtn", type: "button", onclick: stampaOccupazione}, "Stampa"),
+        $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca")))),
+    $("div", {class: "head"}, $("h2", {}, "Occupazione stanze"),
+      $("p", {class: "muted", style: "margin:0"}, `${occ} presenti su ${POSTI_TOT} posti · ${liberi} liberi · ${Math.round(occ / POSTI_TOT * 100)}%`),
+      $("div", {class: "legenda"}, $("span", {class: "st-libera"}, "Libera"), $("span", {class: "st-parziale"}, "Posti liberi"), $("span", {class: "st-piena"}, "Piena"), $("span", {class: "st-oltre"}, "Oltre i posti"))),
+    problemi.length ? $("div", {class: "avviso", role: "alert"}, $("b", {}, `${problemi.length} ${problemi.length === 1 ? "presente senza stanza valida" : "presenti senza stanza valida"}`),
+      problemi.map(p => $("div", {}, `${nomeCompleto(p.o.r)} · ${p.o.cod}: ${p.perche}`)),
+      $("div", {style: "margin-top:6px"}, "Nella colonna Assegnazione stanza/letto scrivi per esempio Stanza 4 - 2.")) : null,
+    SEZIONI.map((z, i) => sezione(i + 1, z.nome)),
+    $("p", {class: "note"}, "Tocca una stanza per vedere chi la occupa. Tocca un nome per aprire la scheda."));
+}
+
+/* ---------------- report presenze per la Prefettura ---------------- */
+const STRUTTURA = CONFIG.report;
+function posizioneGiuridica(cod) {
+  const f = S.dati.fogli.find(x => norm(x.nome) === "stato giuridico");
+  const r = f && (f.dati.get(cod) || [])[0];
+  if (!r) return "";
+  const t = oggi(), comm = campo(r, "Data Appuntamento Commissione");
+  if (comm instanceof Date && comm >= t) return `Commissione il ${fmtData(comm)}`;
+  return testo(campo(r, "Note Legali")) || testo(campo(r, "Status Giuridico"));
+}
+function righeReport() {
+  const t = oggi();
+  return S.dati.ospiti.filter(o => {
+    const u = campo(o.r, "Data Uscita dalla Struttura", "Data uscita");
+    return !u || (u instanceof Date && giorni(t, u) <= 0);
+  }).sort((a, b) => (campo(a.r, "Data arrivo in struttura", "Data arrivo") || 0) - (campo(b.r, "Data arrivo in struttura", "Data arrivo") || 0) || a.cod.localeCompare(b.cod));
+}
+function stampaReport() {
+  const t = oggi(), elenco = righeReport();
+  const doc = nuovoPdf("landscape"), W = 297, F = fontPdf();
+  const testa = () => {
+    doc.setFont(F, "bold"); doc.setFontSize(14); doc.setTextColor(17);
+    doc.text("REPORT PRESENZE", W / 2, 13, {align: "center"});
+    doc.setFont(F, "normal"); doc.setFontSize(9.5);
+    doc.text("Da inviare giornalmente a: ", W / 2 - 2, 18.5, {align: "right"});
+    doc.setFont(F, "bold"); doc.text(STRUTTURA.email, W / 2 - 2, 18.5);
+    doc.autoTable({startY: 22, margin: {left: 30, right: 30}, theme: "grid",
+      styles: {font: F, fontSize: 9.5, cellPadding: 1.6, textColor: 17, lineColor: 60, lineWidth: 0.25},
+      columnStyles: {0: {cellWidth: 55}, 1: {fontStyle: "bold"}},
+      body: [["NOME STRUTTURA", STRUTTURA.nome], ["NOME ENTE GESTORE", STRUTTURA.ente], ["DATA", fmtData(t)]]});
+    return doc.lastAutoTable.finalY + 5;
+  };
+  const y0 = testa();
+  doc.autoTable({startY: y0, margin: {left: 10, right: 10, top: 14, bottom: 14}, theme: "grid", rowPageBreak: "avoid",
+    styles: {font: F, fontSize: 8.6, cellPadding: 1.3, textColor: 17, lineColor: 60, lineWidth: 0.25, valign: "middle", minCellHeight: 10},
+    headStyles: {font: F, fontStyle: "bold", fillColor: [255, 255, 255], textColor: 17, halign: "center", fontSize: 7.8, minCellHeight: 8},
+    head: [["N.\nPROG", "COD.\nVESTANET", "COGNOME NOME", "DATA\nNASCITA", "M/F", "NAZIONALITÀ", "DATA ARRIVO\nIN STRUTTURA", "POSIZIONE\nGIURIDICA", "DATA FINE\nACCOGLIENZA\n(motivazione)", "FIRMA"]],
+    body: elenco.map((o, i) => {
+      const r = o.r, u = campo(r, "Data Uscita dalla Struttura", "Data uscita");
+      const vest = testo(campo(r, "Cod. VESTANET", "Vestanet")) || (testo(campo(r, "Cod. CUI")) ? "CUI " + testo(campo(r, "Cod. CUI")) : "");
+      return [i + 1, vest, `${String(testo(campo(r, "Cognome"))).toUpperCase()} ${String(testo(campo(r, "Nome"))).toUpperCase()}`.trim(),
+        testo(campo(r, "Data di nascita")), testo(campo(r, "Sesso", "M/F")) || "M", String(testo(campo(r, "Nazionalità"))).toUpperCase(),
+        testo(campo(r, "Data arrivo in struttura", "Data arrivo")), posizioneGiuridica(o.cod),
+        u ? `${testo(u)}${testo(campo(r, "Destinazione")) ? "\n(" + testo(campo(r, "Destinazione")) + ")" : ""}` : "", ""];
+    }),
+    columnStyles: {0: {cellWidth: 12, halign: "center"}, 1: {cellWidth: 24}, 2: {cellWidth: 52}, 3: {cellWidth: 21, halign: "center"},
+      4: {cellWidth: 10, halign: "center"}, 5: {cellWidth: 28, halign: "center"}, 6: {cellWidth: 23, halign: "center"},
+      7: {cellWidth: 30, halign: "center", fontSize: 7.8}, 8: {cellWidth: 26, halign: "center", fontSize: 7.8}, 9: {cellWidth: 51}}});
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont(F, "normal"); doc.setFontSize(7.5); doc.setTextColor(95);
+    doc.text(`${STRUTTURA.nome} · Report presenze del ${fmtData(t)} · ${elenco.length} ospiti`, 10, 203);
+    doc.text(`Pagina ${i} di ${n}`, W - 10, 203, {align: "right"}); }
+  consegnaPdf(doc, `Report presenze ${fmtData(t).replace(/\//g, "-")}`);
+}
+function riquadroReport() {
+  const n = righeReport().length;
+  return $("button", {class: "occbtn", type: "button", onclick: stampaReport},
+    $("span", {class: "riga"}, $("b", {}, "Report presenze per la Prefettura"), $("span", {class: "vai"}, "PDF ›")),
+    $("span", {class: "riga note"}, $("span", {}, `${n} ${n === 1 ? "ospite" : "ospiti"} al ${fmtData(oggi())}`), $("span", {}, "da firmare e inviare")));
+}
+
+function stampaOccupazione() {
+  const {per, problemi, occ, liberi} = occupazione(), t = oggi();
+  const doc = nuovoPdf();
+  let y = testataPdf(doc, "Occupazione stanze", `al ${fmtData(t)} · ${occ} su ${POSTI_TOT} posti · ${liberi} liberi`);
+  for (const num of SEZIONI.map((z, i) => i + 1)) {
+    const stanze = Object.keys(STANZE).map(Number).filter(n => SEZIONE(n) === num);
+    y = titoloPdf(doc, y, SEZIONI[num - 1].nome.replace(/–/g, "-"));
+    doc.autoTable({...stileTab(y), head: [["Stanza", "Posti", "Occupati", "Stato", "Ospiti"]],
+      body: stanze.map(n => [n, STANZE[n], per[n].length, statoStanza(n, per[n].length)[1], per[n].map(o => `${nomeCompleto(o.r)} (${o.cod})`).join("\n")]),
+      columnStyles: {0: {cellWidth: 18}, 1: {cellWidth: 16, halign: "center"}, 2: {cellWidth: 20, halign: "center"}, 3: {cellWidth: 24}}});
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  if (problemi.length) {
+    y = titoloPdf(doc, y, "Presenti senza stanza valida");
+    doc.autoTable({...stileTab(y), body: problemi.map(p => [nomeCompleto(p.o.r), p.o.cod, p.perche])});
+  }
+  piediPdf(doc);
+  consegnaPdf(doc, `Occupazione stanze ${fmtData(t).replace(/\//g, "-")}`);
+}
+
+function sezioneCalendario() {
+  const fatti = esportati();
+  const conta = cat => { const ev = eventiCalendario(cat); return {tot: ev.length, nuove: ev.filter(e => !fatti.has(e.uid)).length}; };
+  const g = conta("giur"), sn = conta("san");
+  const sotto = c => c.tot === 0 ? "nessuna in programma" : c.nuove ? `${c.nuove} ${c.nuove === 1 ? "nuova" : "nuove"} da aggiungere` : "tutte già aggiunte";
+  const msg = S.msgCal; S.msgCal = null;
+  return $("section", {class: "section cal"},
+    $("h2", {class: "label"}, "Avvisi nel Calendario"),
+    $("p", {class: "note", style: "margin:0"}, "Mette le scadenze nel Calendario del telefono, con un avviso il giorno prima. Per i documenti anche un avviso un mese prima."),
+    $("button", {class: "btn giur", type: "button", onclick: () => esportaCalendario("giur")}, "Scadenze giuridiche", $("small", {}, sotto(g))),
+    $("button", {class: "btn san", type: "button", onclick: () => esportaCalendario("san")}, "Scadenze sanitarie", $("small", {}, sotto(sn))),
+    msg ? $("div", {class: "msgcal", role: "status"}, msg.t,
+      msg.link ? $("a", {class: "btn", href: msg.link.url, download: msg.link.nome, onclick: () => msg.link.dopo()}, "Apri nel Calendario") : null,
+      msg.mail ? $("button", {class: "btn ghost", type: "button", onclick: msg.mail}, "Invia per email") : null) : null,
+    (g.tot || sn.tot) && !(g.nuove || sn.nuove) ? $("button", {class: "linkbtn", type: "button", onclick: () => { lsSet(LS_CAL, "[]"); vistaElenco(); }}, "Ho cancellato i calendari: riaggiungi tutto") : null);
+}
+
+function vistaElenco() {
+  const t = oggi(), {ospiti} = S.dati;
+  const presenti = ospiti.filter(o => !uscito(o.r));
+  const usciti30 = ospiti.filter(o => { const d = campo(o.r, "Data Uscita dalla Struttura", "Data uscita"); return d instanceof Date && giorni(t, d) <= 30; });
+  // agenda: appuntamenti e scadenze dei presenti
+  const agenda = [];
+  for (const o of presenti) for (const a of avvisi(o.cod)) if (a.d && !a.lontana && (a.k === "app" ? giorni(a.d, t) <= GIORNI_AGENDA : true))
+    agenda.push({...a, o});
+  agenda.sort((a, b) => a.d - b.d);
+
+  const lista = $("ul", {class: "list", id: "lista"});
+  const riempi = () => {
+    const q = norm(S.cerca), qn = q.replace(/^0+/, "");
+    let righe = S.filtro === "presenti" ? presenti : ospiti;
+    if (q) righe = righe.filter(o => /^\d+$/.test(q) ? o.cod.split("-").pop().replace(/^0+/, "") === qn
+      : norm(o.cod + " " + nomeCompleto(o.r)).includes(q));
+    lista.replaceChildren(...(righe.length ? righe.map(o => {
+      const out = uscito(o.r), naz = testo(campo(o.r, "Nazionalità")), st = testo(campo(o.r, "Assegnazione stanza/letto", "stanza"));
+      return $("li", {}, $("button", {class: "row" + (out ? " out" : ""), type: "button", onclick: () => apriScheda(o.cod)},
+        $("span", {class: "name"}, nomeCompleto(o.r)),
+        $("span", {class: "dot " + (out ? "out" : "in")}, out ? "Uscito" : "Presente"),
+        $("span", {class: "meta"}, $("span", {class: "code"}, o.cod), [naz, st].filter(Boolean).map(x => "  ·  " + x).join(""))));
+    }) : [$("li", {class: "empty"}, q ? "Nessun ospite trovato." : "Nessun ospite in elenco.")]));
+  };
+  const cerca = $("input", {class: "input search", id: "cerca", type: "search", value: S.cerca, placeholder: "Codice, numero o cognome",
+    autocomplete: "off", autocapitalize: "characters", enterkeyhint: "search",
+    oninput: e => { S.cerca = e.target.value; riempi(); },
+    onkeydown: e => { if (e.key === "Enter") { const b = lista.querySelector("button.row"); if (b && lista.querySelectorAll("button.row").length === 1) b.click(); } }});
+  const chip = (v, l) => $("button", {class: "chip", type: "button", "aria-pressed": String(S.filtro === v),
+    onclick: () => { S.filtro = v; lsSet(CONFIG.id + "-filtro", v); vistaElenco(); }}, l);
+
+  mostra(
+    $("header", {class: "top"},
+      $("div", {class: "toprow"}, $("h1", {}, "Ospiti"), $("div", {class: "btns"},
+        $("button", {class: "iconbtn", type: "button", onclick: stampaPresenti}, "Stampa elenco"),
+        $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca"))),
+      cerca,
+      $("div", {class: "chips"}, chip("presenti", `Presenti ${presenti.length}`), chip("tutti", `Tutti ${ospiti.length}`))),
+    S.dati.protetto ? null : $("div", {class: "avviso", role: "alert"},
+      $("b", {}, "Questo file non ha la password."),
+      " L'app lo mostra adesso, ma non lo conserva: alla prossima apertura torna alla copia protetta precedente. Sul Mac apri il file in Excel, menu File, Password, scrivi la password di apertura e salva. Poi sceglilo di nuovo qui."),
+    S.cerca ? null : $("div", {class: "logo small"}, $("img", {src: "logo.png", alt: CONFIG.nome})),
+    S.cerca ? null : $("div", {class: "stats"},
+      $("div", {class: "stat"}, $("b", {}, presenti.length), $("span", {}, "presenti")),
+      $("div", {class: "stat"}, $("b", {}, usciti30.length), $("span", {}, "usciti negli ultimi 30 giorni")),
+      $("div", {class: "stat"}, $("b", {}, agenda.length), $("span", {}, "scadenze e appuntamenti"))),
+    S.cerca || !CON_STANZE ? null : riquadroOccupazione(),
+    S.cerca ? null : riquadroReport(),
+    S.cerca || !agenda.length ? null : $("section", {class: "section"},
+      $("h2", {class: "label"}, "Da tenere d'occhio"),
+      $("div", {class: "legenda"}, $("span", {class: "b-giur"}, "Giuridico"), $("span", {class: "b-san"}, "Sanitario"), $("span", {class: "b-bad"}, "Scaduto")),
+      $("ul", {class: "agenda"}, agenda.slice(0, 15).map(a => $("li", {class: `cat-${a.cat}` + (a.scaduta ? " scaduta" : "")}, $("button", {type: "button", onclick: () => apriScheda(a.o.cod)},
+        $("span", {class: "when"}, breve(a.d)),
+        $("span", {class: "what"}, $("span", {class: "tipo"}, NOMI_CAT[a.cat]), " ", a.t.replace(/: \d\d\/\d\d\/\d{4}$/, "")),
+        $("span", {class: "who"}, `${nomeCompleto(a.o.r)} · ${a.o.cod}`)))))),
+    S.cerca ? null : sezioneCalendario(),
+    $("section", {class: "section"}, S.cerca ? null : $("h2", {class: "label"}, S.filtro === "presenti" ? "In struttura" : "Tutti gli ospiti"), lista),
+    $("p", {class: "note"}, `${S.file.nome} · ${etichettaFile(S.file)}` + (S.dati.protetto ? "" : " · file senza password, non salvato sul telefono"))
+  );
+  riempi();
+}
+
+/* ---------------- stampa ---------------- */
+function testaOspite(cod) {
+  const o = S.dati.ospiti.find(x => x.cod === cod), r = o.r, t = oggi(), sub = [], badges = [];
+  const nasc = campo(r, "Data di nascita");
+  if (nasc instanceof Date) { let e = t.getFullYear() - nasc.getFullYear(); if (t < new Date(t.getFullYear(), nasc.getMonth(), nasc.getDate())) e--; sub.push(`${e} anni`); }
+  for (const k of ["Nazionalità", "Lingua madre", "Assegnazione stanza/letto"]) { const v = testo(campo(r, k)); if (v) sub.push(v); }
+  const usc = campo(r, "Data Uscita dalla Struttura", "Data uscita");
+  if (usc) { const d = testo(campo(r, "Destinazione")); badges.push({t: `Uscito il ${testo(usc)}${d ? " → " + d : ""}`, c: "b-bad"}); }
+  else { const a = campo(r, "Data arrivo in struttura", "Data arrivo"); badges.push({t: "In struttura" + (a instanceof Date ? ` da ${giorni(t, a)} giorni` : ""), c: "b-ok"}); }
+  badges.push(...avvisi(cod));
+  return {r, sub, badges};
+}
+const dataOra = ms => { const d = new Date(ms); return `${fmtData(d)} alle ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+const etichettaFile = f => f.modificato ? `file salvato il ${dataOra(f.modificato)}` : `scelto il ${fmtData(new Date(f.quando))}`;
+const oraStampa = () => { const d = new Date(); return `${fmtData(d)} alle ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; };
+
+/* Il PDF si crea sul telefono e si apre con il pannello Condividi di iOS (Stampa, Salva su File, Mail).
+   Font e logo si caricano prima, così il PDF nasce subito al tocco del pulsante. */
+const PDF = {pronte: false, inCorso: false};
+async function caricaRisorsePdf() {
+  if (PDF.pronte || PDF.inCorso) return;
+  PDF.inCorso = true;
+  try {
+    const b64 = async u => {
+      const buf = new Uint8Array(await (await fetch(u)).arrayBuffer());
+      let s = ""; for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+      return btoa(s);
+    };
+    const [reg, bold, logo] = await Promise.all([b64("DejaVuSans.ttf"), b64("DejaVuSans-Bold.ttf"), b64("logo.png")]);
+    const src = "data:image/png;base64," + logo;
+    const rapporto = await new Promise(ok => { const i = new Image(); i.onload = () => ok(i.naturalHeight / i.naturalWidth || 0.3); i.onerror = () => ok(0.3); i.src = src; });
+    Object.assign(PDF, {reg, bold, logo: src, rapporto, pronte: true});
+  } catch (e) { /* senza font speciali si usa quello standard */ }
+  finally { PDF.inCorso = false; }
+}
+const M = 14, LARG = 210, VERDE = [14, 87, 85];
+const fontPdf = () => PDF.pronte ? "DV" : "helvetica";
+function nuovoPdf(orient) {
+  const doc = new window.jspdf.jsPDF({unit: "mm", format: "a4", orientation: orient || "portrait"});
+  if (PDF.pronte) {
+    doc.addFileToVFS("DV.ttf", PDF.reg); doc.addFont("DV.ttf", "DV", "normal");
+    doc.addFileToVFS("DVB.ttf", PDF.bold); doc.addFont("DVB.ttf", "DV", "bold");
+  }
+  doc.setFont(fontPdf(), "normal");
+  return doc;
+}
+function testataPdf(doc, titolo, sotto) {
+  let wLogo = 62, hLogo = 62 * (PDF.rapporto || 0.3);
+  if (hLogo > 26) { hLogo = 26; wLogo = 26 / PDF.rapporto; }
+  if (PDF.logo) doc.addImage(PDF.logo, "PNG", M, 10, wLogo, hLogo);
+  doc.setFont(fontPdf(), "bold"); doc.setFontSize(16); doc.setTextColor(17);
+  const tl = doc.splitTextToSize(titolo, 108);
+  doc.text(tl, LARG - M, 17, {align: "right"});
+  let fondo = 17 + (tl.length - 1) * 6.5;
+  if (sotto) {
+    doc.setFont(fontPdf(), "normal"); doc.setFontSize(9.5); doc.setTextColor(70);
+    const sl = doc.splitTextToSize(sotto, 108);
+    doc.text(sl, LARG - M, fondo + 6, {align: "right"});
+    fondo += 6 + (sl.length - 1) * 4.2;
+  }
+  const y = Math.max(10 + hLogo, fondo) + 3;
+  doc.setDrawColor(...VERDE); doc.setLineWidth(0.5); doc.line(M, y, LARG - M, y);
+  return y + 6;
+}
+function titoloPdf(doc, y, t) {
+  if (y > 262) { doc.addPage(); y = 16; }
+  doc.setFont(fontPdf(), "bold"); doc.setFontSize(11.5); doc.setTextColor(...VERDE);
+  doc.text(t, M, y);
+  doc.setDrawColor(187, 198, 195); doc.setLineWidth(0.2); doc.line(M, y + 1.6, LARG - M, y + 1.6);
+  return y + 3.5;
+}
+const stileTab = y => ({startY: y, margin: {left: M, right: M, bottom: 18, top: 14}, theme: "plain", rowPageBreak: "avoid",
+  styles: {font: fontPdf(), fontSize: 9.5, cellPadding: 1.6, textColor: 20, lineColor: [210, 217, 215], lineWidth: {bottom: 0.2}},
+  headStyles: {font: fontPdf(), fontStyle: "bold", fillColor: [231, 238, 236], textColor: 20}});
+function piediPdf(doc) {
+  const n = doc.getNumberOfPages(), quando = oraStampa();
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i); doc.setFont(fontPdf(), "normal"); doc.setFontSize(7.5); doc.setTextColor(95);
+    doc.setDrawColor(187, 198, 195); doc.setLineWidth(0.2); doc.line(M, 281, LARG - M, 281);
+    doc.text(`Stampato il ${quando} · ${CONFIG.nome} · Documento riservato: contiene dati personali. Non lasciarlo incustodito e distruggilo quando non serve più.`, M, 285, {maxWidth: 158});
+    doc.text(`Pagina ${i} di ${n}`, LARG - M, 285, {align: "right"});
+  }
+}
+function consegnaPdf(doc, nome) {
+  nome = nome.replace(/[\\/:*?"<>|]/g, "-");
+  const blob = doc.output("blob");
+  let file = null;
+  try { file = new File([blob], nome + ".pdf", {type: "application/pdf"}); } catch (e) {}
+  if (file && navigator.canShare && navigator.canShare({files: [file]})) {
+    navigator.share({files: [file], title: nome}).catch(e => { if (e && e.name !== "AbortError") apriPdf(blob, nome); });
+  } else apriPdf(blob, nome);
+}
+function apriPdf(blob, nome) {
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, "_blank");
+  if (!w) { const a = $("a", {href: url, download: nome + ".pdf"}); document.body.append(a); a.click(); a.remove(); }
+}
+
+function stampaScheda(cod) {
+  const {r, sub, badges} = testaOspite(cod);
+  const doc = nuovoPdf();
+  let y = testataPdf(doc, nomeCompleto(r), [cod, ...sub].join("  ·  "));
+  // riquadro dello stato
+  doc.setFont(fontPdf(), "normal"); doc.setFontSize(9.5);
+  const righe = badges.flatMap(b => doc.splitTextToSize(b.t, 170));
+  const h = righe.length * 4.6 + 3.5;
+  doc.setFillColor(241, 244, 243); doc.rect(M, y - 4, LARG - 2 * M, h, "F");
+  doc.setFillColor(...VERDE); doc.rect(M, y - 4, 0.8, h, "F");
+  doc.setTextColor(20); doc.text(righe, M + 4, y + 0.2, {lineHeightFactor: 1.35});
+  y += h + 4;
+  for (const f of S.dati.fogli) {
+    const elenco = f.dati.get(cod) || [];
+    const multi = elenco.length > 1 || norm(f.nome) === "registro interventi";
+    y = titoloPdf(doc, y, f.titolo);
+    if (!elenco.length) {
+      doc.setFont(fontPdf(), "normal"); doc.setFontSize(9.5); doc.setTextColor(120);
+      doc.text("Nessun dato inserito.", M, y + 4); y += 11; continue;
+    }
+    if (!multi) {
+      doc.autoTable({...stileTab(y), body: f.campi.map(k => [k, testo(elenco[0][k])]),
+        columnStyles: {0: {cellWidth: 64, textColor: 85}}});
+    } else {
+      const kd = f.campi.find(k => norm(k) === "data");
+      const col = kd ? [kd, ...f.campi.filter(k => k !== kd)] : f.campi;
+      const ord = kd ? [...elenco].sort((a, b) => (b[kd] || 0) - (a[kd] || 0)) : elenco;
+      doc.autoTable({...stileTab(y), head: [col], body: ord.map(x => col.map(k => testo(x[k]))),
+        styles: {...stileTab(y).styles, fontSize: 8.8}});
+    }
+    y = doc.lastAutoTable.finalY + 7;
+  }
+  piediPdf(doc);
+  consegnaPdf(doc, `Scheda ${cod} ${nomeCompleto(r)}`);
+}
+
+function stampaPresenti() {
+  const t = oggi();
+  const pres = S.dati.ospiti.filter(o => !uscito(o.r));
+  const agenda = [];
+  for (const o of pres) for (const a of avvisi(o.cod)) if (a.d) agenda.push({...a, o});
+  agenda.sort((a, b) => a.d - b.d);
+  const doc = nuovoPdf();
+  let y = testataPdf(doc, "Ospiti presenti", `al ${fmtData(t)} · ${pres.length} ospiti`);
+  doc.autoTable({...stileTab(y),
+    head: [["N.", "Codice", "Cognome e nome", "Nazionalità", "Stanza / letto", "Arrivo", "Giorni"]],
+    body: pres.map((o, i) => { const a = campo(o.r, "Data arrivo in struttura", "Data arrivo");
+      return [i + 1, o.cod, nomeCompleto(o.r), testo(campo(o.r, "Nazionalità")), testo(campo(o.r, "Assegnazione stanza/letto", "stanza")),
+        testo(a), a instanceof Date ? giorni(t, a) : ""]; }),
+    styles: {...stileTab(y).styles, fontSize: 9},
+    columnStyles: {0: {cellWidth: 9}, 1: {cellWidth: 30}, 4: {cellWidth: 26}, 5: {cellWidth: 23}, 6: {cellWidth: 16, halign: "right"}}});
+  y = doc.lastAutoTable.finalY + 8;
+  if (agenda.length) {
+    y = titoloPdf(doc, y, "Scadenze e appuntamenti");
+    doc.autoTable({...stileTab(y), head: [["Data", "Tipo", "Cosa", "Ospite", "Codice"]],
+      body: agenda.map(a => [fmtData(a.d), (a.scaduta ? "Scaduto · " : "") + (NOMI_CAT[a.cat] || ""), a.t.replace(/: \d\d\/\d\d\/\d{4}$/, ""), nomeCompleto(a.o.r), a.o.cod]),
+      columnStyles: {0: {cellWidth: 22}, 1: {cellWidth: 27}, 4: {cellWidth: 29}},
+      didParseCell: c => { if (c.section === "body" && c.column.index === 1) {
+        const v = String(c.cell.raw); c.cell.styles.fontStyle = "bold";
+        c.cell.styles.textColor = v.startsWith("Scaduto") ? [154, 42, 42] : v === "Sanitario" ? [122, 62, 142] : [32, 71, 122]; } }});
+  }
+  piediPdf(doc);
+  consegnaPdf(doc, `Ospiti presenti ${fmtData(t).replace(/\//g, "-")}`);
+}
+
+function apriScheda(cod) { S.cod = cod; vistaScheda(); window.scrollTo(0, 0); }
+
+function vistaScheda() {
+  const cod = S.cod, o = S.dati.ospiti.find(x => x.cod === cod); if (!o) return vistaElenco();
+  const r = o.r, t = oggi();
+  const sub = [];
+  const nasc = campo(r, "Data di nascita");
+  if (nasc instanceof Date) { let e = t.getFullYear() - nasc.getFullYear(); if (t < new Date(t.getFullYear(), nasc.getMonth(), nasc.getDate())) e--; sub.push(`${e} anni`); }
+  for (const k of ["Nazionalità", "Lingua madre", "Assegnazione stanza/letto"]) { const v = testo(campo(r, k)); if (v) sub.push(v); }
+  const badges = [];
+  const usc = campo(r, "Data Uscita dalla Struttura", "Data uscita");
+  if (usc) { const d = testo(campo(r, "Destinazione")); badges.push({t: `Uscito il ${testo(usc)}${d ? " → " + d : ""}`, c: "b-bad"}); }
+  else { const a = campo(r, "Data arrivo in struttura", "Data arrivo"); badges.push({t: "In struttura" + (a instanceof Date ? ` da ${giorni(t, a)} giorni` : ""), c: "b-ok"}); }
+  badges.push(...avvisi(cod));
+
+  const schede = S.dati.fogli.map((f, i) => {
+    const righe = f.dati.get(cod) || [];
+    const multi = righe.length > 1 || norm(f.nome) === "registro interventi";
+    let corpo;
+    if (!righe.length) corpo = $("p", {class: "nodata"}, "Nessun dato ancora inserito.");
+    else if (!multi) corpo = $("dl", {class: "kv"}, f.campi.map(k => { const v = testo(righe[0][k]);
+      return $("div", {}, $("dt", {}, k), $("dd", {class: v ? null : "none"}, v || "—")); }));
+    else {
+      const kd = f.campi.find(k => norm(k) === "data");
+      const ord = kd ? [...righe].sort((a, b) => (b[kd] || 0) - (a[kd] || 0)) : righe;
+      corpo = $("div", {}, ord.map(x => $("div", {class: "entry"},
+        kd ? $("span", {class: "when"}, testo(x[kd])) : null,
+        $("dl", {class: "kv", style: "padding:0"}, f.campi.filter(k => k !== kd && testo(x[k])).map(k =>
+          $("div", {style: "border:0;padding-block:3px"}, $("dt", {}, k), $("dd", {}, testo(x[k]))))))));
+    }
+    return $("details", {class: "card", open: i === 0 || (multi && righe.length) ? true : null},
+      $("summary", {}, f.titolo, $("small", {}, righe.length ? (multi ? `${righe.length} ${righe.length === 1 ? "voce" : "voci"}` : "") : "vuoto")), corpo);
+  });
+
+  mostra(
+    $("header", {class: "top"}, $("div", {class: "toprow"},
+      $("button", {class: "back", type: "button", onclick: () => { S.cod = null; vistaElenco(); }}, "‹ Ospiti"),
+      $("div", {class: "btns"},
+        $("button", {class: "iconbtn", type: "button", onclick: () => stampaScheda(cod)}, "Stampa"),
+        $("button", {class: "iconbtn", type: "button", onclick: blocca}, "Blocca")))),
+    $("div", {class: "head"},
+      $("span", {class: "code muted"}, cod),
+      $("h2", {}, nomeCompleto(r)),
+      sub.length ? $("p", {class: "muted", style: "margin:0"}, sub.join("  ·  ")) : null,
+      $("div", {class: "badges"}, badges.map(b => $("span", {class: "badge " + b.c}, b.t)))),
+    schede,
+    $("button", {class: "btn ghost", type: "button", onclick: () => { S.cod = null; vistaElenco(); }}, "Torna all'elenco")
+  );
+}
+
+/* blocco automatico */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) S.nascostoDa = Date.now();
+  else if (S.dati && S.nascostoDa && Date.now() - S.nascostoDa > BLOCCO_MINUTI * 60000) blocca();
+});
+
+/* avvio */
+if (typeof XLSX === "undefined" || typeof aesjs === "undefined" || typeof sha512 === "undefined") {
+  mostra($("section", {class: "lock"}, $("h1", {}, "Accoglienza Tascabile"),
+    $("p", {class: "err"}, "Non riesco a caricare i componenti dell'app. Apri l'app una volta con la connessione attiva, poi funzionerà anche senza.")));
+} else vistaBlocco();
+
+/* funzionamento senza rete */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {});
+  // arriva una versione nuova: ricarico solo se l'app è ancora bloccata
+  let ricaricata = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!ricaricata && !S.dati) { ricaricata = true; location.reload(); }
+  });
+}
+</script>
+</body>
+</html>

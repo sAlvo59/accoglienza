@@ -1,10 +1,10 @@
 // Tiene in memoria l'app sul telefono, così parte anche senza rete.
 // Con la connessione scarica sempre la pagina più recente; senza, usa la copia salvata.
 // Quando cambi un file dell'app, aumenta il numero di versione qui sotto.
-const VERSIONE = "accoglienza-v13";
+const VERSIONE = "accoglienza-v14";
 const FILE = ["./", "index.html", "manifest.webmanifest", "logo.png",
   "icona-180.png", "icona-192.png", "icona-512.png",
-  "xlsx.full.min.js", "aes.js", "sha512.min.js",
+  "config.js", "xlsx.full.min.js", "aes.js", "sha512.min.js",
   "jspdf.umd.min.js", "jspdf.autotable.min.js", "DejaVuSans.ttf", "DejaVuSans-Bold.ttf"];
 
 self.addEventListener("install", e => {
@@ -23,6 +23,7 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
+  if (new URL(req.url).pathname.includes("/ape/")) return; // l'app dell'APE ha il suo archivio
   const pagina = req.mode === "navigate" || req.destination === "document";
   if (pagina) {
     // prima la rete, poi la copia salvata

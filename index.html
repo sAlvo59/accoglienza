@@ -71,7 +71,7 @@ button{cursor:pointer}
 .hide-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 
 .logo{display:block;background:#FFFFFF;border-radius:14px;padding:10px 12px;border:1px solid var(--line)}
-.logo img{display:block;width:100%;height:auto}
+.logo img{display:block;width:100%;height:auto;max-height:var(--logo-max,none);object-fit:contain}
 .logo.small{padding:6px 8px;border-radius:10px;margin-block:4px 14px}
 .avviso{background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:12px 14px;margin-block:4px 14px;font-size:var(--s-0);line-height:1.45}
 .avviso b{display:block;font-size:var(--s-1);margin-bottom:4px}
@@ -208,6 +208,7 @@ button{cursor:pointer}
 <div class="wrap" id="app"></div>
 <div id="stampa" aria-hidden="true"></div>
 
+<script src="config.js"></script>
 <script src="xlsx.full.min.js"></script>
 <script src="aes.js"></script>
 <script src="sha512.min.js"></script>
@@ -246,7 +247,7 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 function idb() {
   return new Promise((res, rej) => {
     try {
-      const r = indexedDB.open("accoglienza", 1);
+      const r = indexedDB.open(CONFIG.id, 1);
       r.onupgradeneeded = () => r.result.createObjectStore("file");
       r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
     } catch (e) { rej(e); }
@@ -410,7 +411,7 @@ function avvisi(cod) {
 }
 
 /* ---------------- calendario ---------------- */
-const LS_CAL = "cal-esportati";
+const LS_CAL = CONFIG.id + "-cal-esportati";
 const esportati = () => { try { return new Set(JSON.parse(lsGet(LS_CAL) || "[]")); } catch { return new Set(); } };
 const ymd = d => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
 function eventiCalendario(cat) {
@@ -418,20 +419,20 @@ function eventiCalendario(cat) {
   for (const o of S.dati.ospiti.filter(x => !uscito(x.r)))
     for (const a of avvisi(o.cod))
       if (a.cat === cat && a.d && !a.scaduta && giorni(a.d, t) >= 0)
-        ev.push({uid: `${o.cod}-${norm(a.campo).replace(/[^a-z0-9]+/g, "-")}-${ymd(a.d)}@casa-dcarota`, cod: o.cod, d: a.d, campo: a.campo, scad: a.k === "scad", cat});
+        ev.push({uid: `${o.cod}-${norm(a.campo).replace(/[^a-z0-9]+/g, "-")}-${ymd(a.d)}@${CONFIG.id}`, cod: o.cod, d: a.d, campo: a.campo, scad: a.k === "scad", cat});
   return ev.sort((x, y) => x.d - y.d);
 }
 function testoIcs(s) { return String(s).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\n/g, "\\n"); }
 function piega(riga) { const out = []; while (riga.length > 60) { out.push(riga.slice(0, 60)); riga = " " + riga.slice(60); } out.push(riga); return out.join("\r\n"); }
 function creaIcs(eventi, nomeCal) {
   const ora = new Date(), stamp = ora.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Casa D. Carota//Accoglienza Tascabile//IT", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + testoIcs(nomeCal)];
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${CONFIG.nome}//Accoglienza Tascabile//IT`, "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "X-WR-CALNAME:" + testoIcs(nomeCal)];
   for (const e of eventi) {
     const fine = new Date(e.d); fine.setDate(fine.getDate() + 1);
     const titolo = `${etichettaCampo(e.campo)} · ${e.cod}`;
     const allarmi = e.scad ? ["-P29DT15H", "-PT15H"] : ["-PT15H", "PT8H"];
     L.push("BEGIN:VEVENT", "UID:" + e.uid, "DTSTAMP:" + stamp, "DTSTART;VALUE=DATE:" + ymd(e.d), "DTEND;VALUE=DATE:" + ymd(fine),
-      "SUMMARY:" + testoIcs(titolo), "DESCRIPTION:" + testoIcs(`${e.campo} per l'ospite ${e.cod}. Apri la scheda nell'app D. Carota per i dettagli.`),
+      "SUMMARY:" + testoIcs(titolo), "DESCRIPTION:" + testoIcs(`${e.campo} per l'ospite ${e.cod}. Apri la scheda nell'app ${CONFIG.nome} per i dettagli.`),
       "CATEGORIES:" + NOMI_CAT[e.cat], "TRANSP:TRANSPARENT");
     for (const tr of allarmi) L.push("BEGIN:VALARM", "ACTION:DISPLAY", "DESCRIPTION:" + testoIcs(titolo), "TRIGGER:" + tr, "END:VALARM");
     L.push("END:VEVENT");
@@ -471,7 +472,7 @@ function condividiFile(blob, nomeFile, tipo, fatto) {
 }
 
 /* ---------------- stato e viste ---------------- */
-const S = {dati: null, file: null, filtro: lsGet("filtro") || "presenti", cerca: "", cod: null, err: "", busy: false, nascostoDa: 0};
+const S = {dati: null, file: null, filtro: lsGet(CONFIG.id + "-filtro") || "presenti", cerca: "", cod: null, err: "", busy: false, nascostoDa: 0};
 const app = document.getElementById("app");
 function mostra(...nodi) { app.replaceChildren(...nodi.flat(Infinity).filter(n => n != null && n !== false)); }
 
@@ -486,7 +487,7 @@ async function vistaBlocco() {
   const form = $("form", {class: "field", onsubmit: e => { e.preventDefault(); sblocca(pw.value); }},
     $("label", {for: "pw", class: "label"}, "Password"), pw, apri);
   mostra($("section", {class: "lock"},
-    $("div", {class: "logo"}, $("img", {src: "logo.png", alt: "Casa D. Carota"})),
+    $("div", {class: "logo"}, $("img", {src: "logo.png", alt: CONFIG.nome})),
     $("h1", {}, "Accoglienza Tascabile"),
     S.file ? $("div", {class: "filebox"}, $("div", {},
       $("b", {}, S.file.nome),
@@ -529,10 +530,11 @@ async function sblocca(password) {
 function blocca() { const st = document.getElementById("stampa"); if (st) st.replaceChildren(); S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
 
 /* ---------------- occupazione ---------------- */
-const STANZE = {1:4, 2:3, 3:3, 4:3, 5:2, 6:2, 7:2, 10:2, 11:2, 12:2, 13:2, 14:2,
-  15:2, 16:2, 17:2, 18:3, 19:2, 20:2, 21:2};
-const SEZIONE = n => n >= 15 ? 2 : 1;
-const DISMESSE = [8, 9]; // stanze singole chiuse: posti autorizzati dalla Prefettura 44
+const STANZE = CONFIG.stanze || {};
+const SEZIONI = (CONFIG.sezioni && CONFIG.sezioni.length) ? CONFIG.sezioni : [{nome: "Stanze", da: 0, a: 9999}];
+const SEZIONE = n => SEZIONI.findIndex(z => n >= z.da && n <= z.a) + 1;
+const DISMESSE = CONFIG.dismesse || [];
+const CON_STANZE = Object.keys(STANZE).length > 0;
 const POSTI_TOT = Object.values(STANZE).reduce((a, b) => a + b, 0);
 function leggiStanza(v) {
   const t = String(testo(v) || "").trim();
@@ -598,13 +600,12 @@ function vistaOccupazione() {
     problemi.length ? $("div", {class: "avviso", role: "alert"}, $("b", {}, `${problemi.length} ${problemi.length === 1 ? "presente senza stanza valida" : "presenti senza stanza valida"}`),
       problemi.map(p => $("div", {}, `${nomeCompleto(p.o.r)} · ${p.o.cod}: ${p.perche}`)),
       $("div", {style: "margin-top:6px"}, "Nella colonna Assegnazione stanza/letto scrivi per esempio Stanza 4 - 2.")) : null,
-    sezione(1, "Sezione 1 · stanze 1–7 e 10–14"),
-    sezione(2, "Sezione 2 · stanze 15–21"),
+    SEZIONI.map((z, i) => sezione(i + 1, z.nome)),
     $("p", {class: "note"}, "Tocca una stanza per vedere chi la occupa. Tocca un nome per aprire la scheda."));
 }
 
 /* ---------------- report presenze per la Prefettura ---------------- */
-const STRUTTURA = {nome: "CASA D. CAROTA", ente: "GRP SRLS", email: "immigrazione.pref_laquila@interno.it"};
+const STRUTTURA = CONFIG.report;
 function posizioneGiuridica(cod) {
   const f = S.dati.fogli.find(x => norm(x.nome) === "stato giuridico");
   const r = f && (f.dati.get(cod) || [])[0];
@@ -668,9 +669,9 @@ function stampaOccupazione() {
   const {per, problemi, occ, liberi} = occupazione(), t = oggi();
   const doc = nuovoPdf();
   let y = testataPdf(doc, "Occupazione stanze", `al ${fmtData(t)} · ${occ} su ${POSTI_TOT} posti · ${liberi} liberi`);
-  for (const num of [1, 2]) {
+  for (const num of SEZIONI.map((z, i) => i + 1)) {
     const stanze = Object.keys(STANZE).map(Number).filter(n => SEZIONE(n) === num);
-    y = titoloPdf(doc, y, num === 1 ? "Sezione 1 · stanze 1-7 e 10-14" : "Sezione 2 · stanze 15-21");
+    y = titoloPdf(doc, y, SEZIONI[num - 1].nome.replace(/–/g, "-"));
     doc.autoTable({...stileTab(y), head: [["Stanza", "Posti", "Occupati", "Stato", "Ospiti"]],
       body: stanze.map(n => [n, STANZE[n], per[n].length, statoStanza(n, per[n].length)[1], per[n].map(o => `${nomeCompleto(o.r)} (${o.cod})`).join("\n")]),
       columnStyles: {0: {cellWidth: 18}, 1: {cellWidth: 16, halign: "center"}, 2: {cellWidth: 20, halign: "center"}, 3: {cellWidth: 24}}});
@@ -730,7 +731,7 @@ function vistaElenco() {
     oninput: e => { S.cerca = e.target.value; riempi(); },
     onkeydown: e => { if (e.key === "Enter") { const b = lista.querySelector("button.row"); if (b && lista.querySelectorAll("button.row").length === 1) b.click(); } }});
   const chip = (v, l) => $("button", {class: "chip", type: "button", "aria-pressed": String(S.filtro === v),
-    onclick: () => { S.filtro = v; lsSet("filtro", v); vistaElenco(); }}, l);
+    onclick: () => { S.filtro = v; lsSet(CONFIG.id + "-filtro", v); vistaElenco(); }}, l);
 
   mostra(
     $("header", {class: "top"},
@@ -742,12 +743,12 @@ function vistaElenco() {
     S.dati.protetto ? null : $("div", {class: "avviso", role: "alert"},
       $("b", {}, "Questo file non ha la password."),
       " L'app lo mostra adesso, ma non lo conserva: alla prossima apertura torna alla copia protetta precedente. Sul Mac apri il file in Excel, menu File, Password, scrivi la password di apertura e salva. Poi sceglilo di nuovo qui."),
-    S.cerca ? null : $("div", {class: "logo small"}, $("img", {src: "logo.png", alt: "Casa D. Carota"})),
+    S.cerca ? null : $("div", {class: "logo small"}, $("img", {src: "logo.png", alt: CONFIG.nome})),
     S.cerca ? null : $("div", {class: "stats"},
       $("div", {class: "stat"}, $("b", {}, presenti.length), $("span", {}, "presenti")),
       $("div", {class: "stat"}, $("b", {}, usciti30.length), $("span", {}, "usciti negli ultimi 30 giorni")),
       $("div", {class: "stat"}, $("b", {}, agenda.length), $("span", {}, "scadenze e appuntamenti"))),
-    S.cerca ? null : riquadroOccupazione(),
+    S.cerca || !CON_STANZE ? null : riquadroOccupazione(),
     S.cerca ? null : riquadroReport(),
     S.cerca || !agenda.length ? null : $("section", {class: "section"},
       $("h2", {class: "label"}, "Da tenere d'occhio"),
@@ -792,7 +793,9 @@ async function caricaRisorsePdf() {
       return btoa(s);
     };
     const [reg, bold, logo] = await Promise.all([b64("DejaVuSans.ttf"), b64("DejaVuSans-Bold.ttf"), b64("logo.png")]);
-    Object.assign(PDF, {reg, bold, logo: "data:image/png;base64," + logo, pronte: true});
+    const src = "data:image/png;base64," + logo;
+    const rapporto = await new Promise(ok => { const i = new Image(); i.onload = () => ok(i.naturalHeight / i.naturalWidth || 0.3); i.onerror = () => ok(0.3); i.src = src; });
+    Object.assign(PDF, {reg, bold, logo: src, rapporto, pronte: true});
   } catch (e) { /* senza font speciali si usa quello standard */ }
   finally { PDF.inCorso = false; }
 }
@@ -808,8 +811,9 @@ function nuovoPdf(orient) {
   return doc;
 }
 function testataPdf(doc, titolo, sotto) {
-  const hLogo = 62 * 216 / 727;
-  if (PDF.logo) doc.addImage(PDF.logo, "PNG", M, 10, 62, hLogo);
+  let wLogo = 62, hLogo = 62 * (PDF.rapporto || 0.3);
+  if (hLogo > 26) { hLogo = 26; wLogo = 26 / PDF.rapporto; }
+  if (PDF.logo) doc.addImage(PDF.logo, "PNG", M, 10, wLogo, hLogo);
   doc.setFont(fontPdf(), "bold"); doc.setFontSize(16); doc.setTextColor(17);
   const tl = doc.splitTextToSize(titolo, 108);
   doc.text(tl, LARG - M, 17, {align: "right"});
@@ -839,7 +843,7 @@ function piediPdf(doc) {
   for (let i = 1; i <= n; i++) {
     doc.setPage(i); doc.setFont(fontPdf(), "normal"); doc.setFontSize(7.5); doc.setTextColor(95);
     doc.setDrawColor(187, 198, 195); doc.setLineWidth(0.2); doc.line(M, 281, LARG - M, 281);
-    doc.text(`Stampato il ${quando} · Casa D. Carota · Documento riservato: contiene dati personali. Non lasciarlo incustodito e distruggilo quando non serve più.`, M, 285, {maxWidth: 158});
+    doc.text(`Stampato il ${quando} · ${CONFIG.nome} · Documento riservato: contiene dati personali. Non lasciarlo incustodito e distruggilo quando non serve più.`, M, 285, {maxWidth: 158});
     doc.text(`Pagina ${i} di ${n}`, LARG - M, 285, {align: "right"});
   }
 }
