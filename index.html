@@ -529,9 +529,10 @@ async function sblocca(password) {
 function blocca() { const st = document.getElementById("stampa"); if (st) st.replaceChildren(); S.dati = null; S.cod = null; S.cerca = ""; vistaBlocco(); }
 
 /* ---------------- occupazione ---------------- */
-const STANZE = {1:4, 2:3, 3:3, 4:3, 5:2, 6:2, 7:2, 8:1, 9:1, 10:2, 11:2, 12:2, 13:2, 14:2,
+const STANZE = {1:4, 2:3, 3:3, 4:3, 5:2, 6:2, 7:2, 10:2, 11:2, 12:2, 13:2, 14:2,
   15:2, 16:2, 17:2, 18:3, 19:2, 20:2, 21:2};
 const SEZIONE = n => n >= 15 ? 2 : 1;
+const DISMESSE = [8, 9]; // stanze singole chiuse: posti autorizzati dalla Prefettura 44
 const POSTI_TOT = Object.values(STANZE).reduce((a, b) => a + b, 0);
 function leggiStanza(v) {
   const t = String(testo(v) || "").trim();
@@ -546,6 +547,7 @@ function occupazione() {
     const v = campo(o.r, "Assegnazione stanza/letto", "stanza");
     const n = leggiStanza(v);
     if (n === null) problemi.push({o, perche: "stanza non indicata"});
+    else if (DISMESSE.includes(n)) problemi.push({o, perche: `assegnato alla stanza ${n}, che non è più in uso`});
     else if (!STANZE[n]) problemi.push({o, perche: `stanza «${testo(v)}» non riconosciuta`});
     else per[n].push(o);
   }
@@ -596,7 +598,7 @@ function vistaOccupazione() {
     problemi.length ? $("div", {class: "avviso", role: "alert"}, $("b", {}, `${problemi.length} ${problemi.length === 1 ? "presente senza stanza valida" : "presenti senza stanza valida"}`),
       problemi.map(p => $("div", {}, `${nomeCompleto(p.o.r)} · ${p.o.cod}: ${p.perche}`)),
       $("div", {style: "margin-top:6px"}, "Nella colonna Assegnazione stanza/letto scrivi per esempio Stanza 4 - 2.")) : null,
-    sezione(1, "Sezione 1 · stanze 1–14"),
+    sezione(1, "Sezione 1 · stanze 1–7 e 10–14"),
     sezione(2, "Sezione 2 · stanze 15–21"),
     $("p", {class: "note"}, "Tocca una stanza per vedere chi la occupa. Tocca un nome per aprire la scheda."));
 }
@@ -607,7 +609,7 @@ function stampaOccupazione() {
   let y = testataPdf(doc, "Occupazione stanze", `al ${fmtData(t)} · ${occ} su ${POSTI_TOT} posti · ${liberi} liberi`);
   for (const num of [1, 2]) {
     const stanze = Object.keys(STANZE).map(Number).filter(n => SEZIONE(n) === num);
-    y = titoloPdf(doc, y, num === 1 ? "Sezione 1 · stanze 1-14" : "Sezione 2 · stanze 15-21");
+    y = titoloPdf(doc, y, num === 1 ? "Sezione 1 · stanze 1-7 e 10-14" : "Sezione 2 · stanze 15-21");
     doc.autoTable({...stileTab(y), head: [["Stanza", "Posti", "Occupati", "Stato", "Ospiti"]],
       body: stanze.map(n => [n, STANZE[n], per[n].length, statoStanza(n, per[n].length)[1], per[n].map(o => `${nomeCompleto(o.r)} (${o.cod})`).join("\n")]),
       columnStyles: {0: {cellWidth: 18}, 1: {cellWidth: 16, halign: "center"}, 2: {cellWidth: 20, halign: "center"}, 3: {cellWidth: 24}}});
